@@ -1,6 +1,6 @@
 FROM ubuntu:latest
 
-ARG USER=developer
+ARG USER=ubuntu
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt update \
     && apt install -y --no-install-recommends sudo git zsh curl wget ca-certificates \
@@ -8,10 +8,11 @@ RUN apt update \
     && apt autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
-RUN useradd -m -s /usr/bin/zsh ${USER} \
-    && echo "${USER} ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/${USER} \
-    && chmod 0440 /etc/sudoers.d/${USER}
-
+#RUN useradd -m -s /usr/bin/zsh ${USER} \
+#    && echo "${USER} ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/${USER} \
+#    && chmod 0440 /etc/sudoers.d/${USER} 
+RUN echo "${USER} ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/${USER} \
+    && chmod 0440 /etc/sudoers.d/${USER} 
 
 USER ${USER}
 ARG HOME=/home/${USER}
