@@ -25,6 +25,12 @@ SECRET_KEY = 'django-insecure-x%0tid0jzce)@#^ds#zgjaoai$shz+=i1!2zpj05pr*le^1hk!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 PRODUCTION = getenv('PRODUCTION', 'False') == 'True'
+AWS_ACCESS_KEY_ID = getenv("AWS_ACCESS_KEY_ID", "test")
+AWS_SECRET_ACCESS_KEY = getenv("AWS_SECRET_ACCESS_KEY", "test")
+AWS_REGION = getenv("AWS_REGION", "us-east-1")
+AWS_STORAGE_BUCKET_NAME = getenv("AWS_STORAGE_BUCKET_NAME", "local-bucket")
+# Only LocalStack needs this; harmless in AWS if unset
+AWS_S3_ENDPOINT_URL = getenv("AWS_S3_ENDPOINT_URL", "http://localhost:4566")
 ALLOWED_HOSTS = []
 
 # TODO, CHANGE, FOR DEV ONLY
@@ -43,6 +49,12 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     'user',
     'rest_framework',
+    'course',
+    'module',
+    'question',
+    'questionbank',
+    'questionresponse',
+    'quiz',
 ]
 
 MIDDLEWARE = [

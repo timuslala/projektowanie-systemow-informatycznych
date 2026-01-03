@@ -14,7 +14,10 @@
 "features": {
 	"ghcr.io/itsmechlark/features/postgresql:1": {},
   "ghcr.io/devcontainers/features/terraform": {},
-  "ghcr.io/audacioustux/devcontainers/localstack": {}
+  "ghcr.io/audacioustux/devcontainers/localstack": {},
+  "ghcr.io/devcontainers/features/docker-in-docker": {}
 },
-"postCreateCommand": "sudo -u postgres psql -h /var/run/postgresql -c \"ALTER USER postgres WITH PASSWORD 'postgres';\""
+"postCreateCommand": "sudo -u postgres psql -h /var/run/postgresql -c \"ALTER USER postgres WITH PASSWORD 'postgres';\"",
+"postStartCommand": "localstack start"
+
 }
