@@ -1,9 +1,8 @@
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import permissions, serializers, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from drf_yasg import openapi
-from common.swagger_utils import swagger_tags_for_viewset
 
 from .models import Module
 from .permissions import IsCourseInstructor, IsStudentEnrolledInCourseReadOnly
@@ -15,7 +14,6 @@ class ModuleSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-@swagger_tags_for_viewset(tags=["modules"])
 class ModuleViewSet(viewsets.ModelViewSet):
     serializer_class = ModuleSerializer
     permission_classes = [
@@ -48,28 +46,25 @@ class ModuleImageView(APIView):
             return Response({"error": "Module not found"}, status=404)
 
     @swagger_auto_schema(
-            tags=["modules - image"],
-            operation_description="Upload a new image for the module",
-            consumes=["multipart/form-data"],
-            manual_parameters=[
-                openapi.Parameter(
-                    name="image",
-                    in_=openapi.IN_FORM,
-                    type=openapi.TYPE_FILE,
-                    required=True,
-                    description="Module image file PNG image only (image/png)",
-                ),
-            ],
-            responses={200: "Image uploaded"},
-        )
+        tags=["modules - image"],
+        operation_description="Upload a new image for the module",
+        consumes=["multipart/form-data"],
+        manual_parameters=[
+            openapi.Parameter(
+                name="image",
+                in_=openapi.IN_FORM,
+                type=openapi.TYPE_FILE,
+                required=True,
+                description="Module image file PNG image only (image/png)",
+            ),
+        ],
+        responses={200: "Image uploaded"},
+    )
     def post(self, request, course_id, module_id):
         try:
             fileobj = request.FILES["image"]
             if fileobj.content_type != "image/png":
-                return Response(
-                    {"status": "Only PNG images are allowed"},
-                    status=400
-                )
+                return Response({"status": "Only PNG images are allowed"}, status=400)
             module = Module.objects.get(id=module_id, course__id=course_id)
             module.upload_photo(fileobj)
             return Response({"status": "image uploaded", "photo_url": module.photo_url})

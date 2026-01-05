@@ -20,10 +20,11 @@ from django.urls import path, re_path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
-from rest_framework_simplejwt.views import (TokenObtainPairView,
-                                            TokenRefreshView)
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from module.views import ModuleImageView, ModuleViewSet
+from course.views import CourseViewSet
+from module.swaggered_views import SwaggeredModuleViewSet
+from module.views import ModuleImageView
 from user.views import EmailValidationView, RegisterView
 
 schema_view = get_schema_view(
@@ -56,12 +57,12 @@ urlpatterns = [
     ),
     path(
         "api/course/<int:course_id>/modules/",
-        ModuleViewSet.as_view({"get": "list", "post": "create"}),
+        SwaggeredModuleViewSet.as_view({"get": "list", "post": "create"}),
         name="module-list-by-course",
     ),
     path(
         "api/course/<int:course_id>/modules/<int:module_id>/",
-        ModuleViewSet.as_view(
+        SwaggeredModuleViewSet.as_view(
             {
                 "get": "retrieve",
                 "put": "update",
@@ -75,5 +76,26 @@ urlpatterns = [
         "api/course/<int:course_id>/modules/<int:module_id>/image/",
         ModuleImageView.as_view(),
         name="module-image-by-course",
+    ),
+    path(
+        "api/course/",
+        CourseViewSet.as_view(
+            {
+                "get": "list",
+                "post": "create",
+            }
+        ),
+        name="course-list",
+    ),
+    path(
+        "api/course/<int:course_id>",
+        CourseViewSet.as_view(
+            {
+                "get": "retrieve",
+                "put": "update",
+                "patch": "partial_update",
+                "delete": "destroy",
+            }
+        ),
     ),
 ]

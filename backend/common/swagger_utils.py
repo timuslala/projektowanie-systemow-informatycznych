@@ -1,4 +1,3 @@
-# common/swagger_utils.py
 from drf_yasg.utils import swagger_auto_schema
 
 CRUD_ACTIONS = (
@@ -16,7 +15,7 @@ def swagger_tags_for_viewset(tags):
         for action in CRUD_ACTIONS:
             if hasattr(cls, action):
                 method = getattr(cls, action)
-
+                # prevent reloads from messing with it
                 if hasattr(method, "_swagger_auto_schema"):
                     continue
 
