@@ -1,18 +1,77 @@
-from django.shortcuts import render
-from rest_framework import viewsets, serializers
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import permissions, serializers, viewsets
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from drf_yasg import openapi
+from common.swagger_utils import swagger_tags_for_viewset
+
 from .models import Module
-# Create your views here.
+from .permissions import IsCourseInstructor, IsStudentEnrolledInCourseReadOnly
+
+
 class ModuleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Module
-        fields = '__all__'
+        fields = "__all__"
 
+
+@swagger_tags_for_viewset(tags=["modules"])
 class ModuleViewSet(viewsets.ModelViewSet):
     serializer_class = ModuleSerializer
+    permission_classes = [
+        IsCourseInstructor | IsStudentEnrolledInCourseReadOnly | permissions.IsAdminUser
+    ]
 
     def get_queryset(self):
-        #get only modules related to a specific course
-        course_id = self.kwargs.get('course_id')
-        if course_id:
+        course_id = self.kwargs.get("course_id")
+        module_id = self.kwargs.get("module_id")
+        if course_id and module_id:
+            return Module.objects.filter(course__id=course_id, id=module_id)
+        elif course_id:
             return Module.objects.filter(course__id=course_id)
-        return Module.objects.all()
+        return (
+            Module.objects.all()
+        )  # incoherency cause url patterns dont allow this case but left for future extensibility
+
+
+class ModuleImageView(APIView):
+    permission_classes = [
+        IsCourseInstructor | IsStudentEnrolledInCourseReadOnly | permissions.IsAdminUser
+    ]
+
+    @swagger_auto_schema(tags=["modules - image"])
+    def get(self, request, course_id, module_id):
+        try:
+            module = Module.objects.get(id=module_id, course__id=course_id)
+            return Response({"photo_url": module.photo_url})
+        except Module.DoesNotExist:
+            return Response({"error": "Module not found"}, status=404)
+
+    @swagger_auto_schema(
+            tags=["modules - image"],
+            operation_description="Upload a new image for the module",
+            consumes=["multipart/form-data"],
+            manual_parameters=[
+                openapi.Parameter(
+                    name="image",
+                    in_=openapi.IN_FORM,
+                    type=openapi.TYPE_FILE,
+                    required=True,
+                    description="Module image file PNG image only (image/png)",
+                ),
+            ],
+            responses={200: "Image uploaded"},
+        )
+    def post(self, request, course_id, module_id):
+        try:
+            fileobj = request.FILES["image"]
+            if fileobj.content_type != "image/png":
+                return Response(
+                    {"status": "Only PNG images are allowed"},
+                    status=400
+                )
+            module = Module.objects.get(id=module_id, course__id=course_id)
+            module.upload_photo(fileobj)
+            return Response({"status": "image uploaded", "photo_url": module.photo_url})
+        except Exception:
+            return Response({"status": "error uploading image"}, status=400)

@@ -2,8 +2,9 @@
 
 from django.db import migrations, models
 
+
 def delete_validation_codes(apps, schema_editor):
-    User = apps.get_model('user', 'User')
+    User = apps.get_model("user", "User")
     for user in User.objects.all():
         if user.validation_code == "":
             user.validation_code = None
@@ -13,19 +14,19 @@ def delete_validation_codes(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('user', '0002_user_validation_code'),
+        ("user", "0002_user_validation_code"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
-            name='validation_code',
+            model_name="user",
+            name="validation_code",
             field=models.CharField(max_length=6, blank=True, null=True),
         ),
         migrations.RunPython(delete_validation_codes),
         migrations.AlterField(
-            model_name='user',
-            name='validation_code',
+            model_name="user",
+            name="validation_code",
             field=models.IntegerField(max_length=6, blank=True, null=True),
         ),
     ]
