@@ -3,6 +3,9 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import permissions, serializers, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
+from common.swagger_utils import swagger_tags
 
 from .models import Module
 from .permissions import IsCourseInstructor, IsStudentEnrolledInCourseReadOnly
@@ -14,7 +17,9 @@ class ModuleSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+@swagger_tags(["modules"])
 class ModuleViewSet(viewsets.ModelViewSet):
+    authentication_classes = [JWTAuthentication]
     serializer_class = ModuleSerializer
     permission_classes = [
         IsCourseInstructor | IsStudentEnrolledInCourseReadOnly | permissions.IsAdminUser

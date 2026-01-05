@@ -34,9 +34,27 @@ AWS_STORAGE_BUCKET_NAME = getenv("AWS_STORAGE_BUCKET_NAME", "local-bucket")
 AWS_S3_ENDPOINT_URL = getenv("AWS_S3_ENDPOINT_URL", "http://localhost:4566")
 ALLOWED_HOSTS = []
 
-# TODO, CHANGE, FOR DEV ONLY
+
 CORS_ALLOW_ALL_ORIGINS = True
 # Application definition
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+}
+SWAGGER_SETTINGS = {
+    "USE_SESSION_AUTH": False,
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "description": 'JWT Authorization header. Example: "Bearer <your_access_token>"',
+        }
+    },
+    "DEFAULT_AUTO_SCHEMA_CLASS": "common.swagger_utils.CustomAutoSchema",
+}
+
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -46,6 +64,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "drf_yasg",
     "django.contrib.postgres",
     "user",

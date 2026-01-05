@@ -1,29 +1,18 @@
-from drf_yasg.utils import swagger_auto_schema
-
-CRUD_ACTIONS = (
-    "list",
-    "retrieve",
-    "create",
-    "update",
-    "partial_update",
-    "destroy",
-)
+from drf_yasg.inspectors import SwaggerAutoSchema
 
 
-def swagger_tags_for_viewset(tags):
-    def decorator(cls):
-        for action in CRUD_ACTIONS:
-            if hasattr(cls, action):
-                method = getattr(cls, action)
-                # prevent reloads from messing with it
-                if hasattr(method, "_swagger_auto_schema"):
-                    continue
-
-                setattr(
-                    cls,
-                    action,
-                    swagger_auto_schema(tags=tags)(method),
-                )
-        return cls
+def swagger_tags(tags):
+    def decorator(viewset):
+        viewset.swagger_tags = tags
+        return viewset
 
     return decorator
+
+
+class CustomAutoSchema(SwaggerAutoSchema):
+    def get_tags(self, operation_keys=None):
+        # If the view has a 'swagger_tags' attribute, use it
+        if hasattr(self.view, "swagger_tags"):
+            return self.view.swagger_tags
+        # Otherwise fall back to default behavior
+        return super().get_tags(operation_keys)

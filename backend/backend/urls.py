@@ -20,11 +20,14 @@ from django.urls import path, re_path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import (
+    TokenBlacklistView,
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
 from course.views import CourseViewSet
-from module.swaggered_views import SwaggeredModuleViewSet
-from module.views import ModuleImageView
+from module.views import ModuleImageView, ModuleViewSet
 from user.views import EmailValidationView, RegisterView
 
 schema_view = get_schema_view(
@@ -38,13 +41,15 @@ schema_view = get_schema_view(
     ),
     public=True,
     permission_classes=[permissions.AllowAny],
+    authentication_classes=[],
 )
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
-    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    path("api/register/", RegisterView.as_view(), name="register"),
-    path("api/validate/", EmailValidationView.as_view(), name="email-validate"),
+    path("accounts/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("accounts/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("accounts/logout/", TokenBlacklistView.as_view(), name="token_blacklist"),
+    path("accounts/register/", RegisterView.as_view(), name="register"),
+    path("accounts/validate/", EmailValidationView.as_view(), name="email-validate"),
     re_path(
         r"^swagger(?P<format>\.json|\.yaml)$",
         schema_view.without_ui(cache_timeout=0),
@@ -56,13 +61,13 @@ urlpatterns = [
         name="schema-swagger-ui",
     ),
     path(
-        "api/course/<int:course_id>/modules/",
-        SwaggeredModuleViewSet.as_view({"get": "list", "post": "create"}),
+        "api/courses/<int:course_id>/modules/",
+        ModuleViewSet.as_view({"get": "list", "post": "create"}),
         name="module-list-by-course",
     ),
     path(
-        "api/course/<int:course_id>/modules/<int:module_id>/",
-        SwaggeredModuleViewSet.as_view(
+        "api/courses/<int:course_id>/modules/<int:module_id>/",
+        ModuleViewSet.as_view(
             {
                 "get": "retrieve",
                 "put": "update",
@@ -73,12 +78,12 @@ urlpatterns = [
         name="module-detail-by-course",
     ),
     path(
-        "api/course/<int:course_id>/modules/<int:module_id>/image/",
+        "api/courses/<int:course_id>/modules/<int:module_id>/image/",
         ModuleImageView.as_view(),
         name="module-image-by-course",
     ),
     path(
-        "api/course/",
+        "api/courses/",
         CourseViewSet.as_view(
             {
                 "get": "list",
@@ -88,7 +93,7 @@ urlpatterns = [
         name="course-list",
     ),
     path(
-        "api/course/<int:course_id>",
+        "api/courses/<int:course_id>",
         CourseViewSet.as_view(
             {
                 "get": "retrieve",
