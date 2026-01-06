@@ -3,7 +3,9 @@ from rest_framework import permissions
 
 class IsCourseInstructor(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.is_teacher
+        return request.user.is_authenticated and getattr(
+            request.user, "is_teacher", False
+        )
 
     def has_object_permission(self, request, view, obj):
         return request.user == obj.instructor
@@ -17,11 +19,6 @@ class IsCourseStudentReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return obj.courseprogress_set.filter(user=request.user).exists()
         return False
-
-
-class IsInstructor(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return request.user.is_teacher
 
 
 class IsEnrolledToCourseTaughtByInstructor(permissions.BasePermission):

@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
+from common.permissions import IsInstructor
 from common.swagger_utils import swagger_tags
 from user.models import User
 
@@ -15,7 +16,6 @@ from .permissions import (
     IsCourseInstructor,
     IsCourseStudentReadOnly,
     IsEnrolledToCourseTaughtByInstructor,
-    IsInstructor,
 )
 
 

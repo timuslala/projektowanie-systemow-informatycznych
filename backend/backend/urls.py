@@ -27,6 +27,7 @@ from rest_framework_simplejwt.views import (
 
 from course.views import CourseViewSet, UserInfoView
 from module.views import ModuleImageView, ModuleViewSet
+from questionbank.views import QuestionBankViewSet
 from user.views import CustomTokenObtainPairView, EmailValidationView, RegisterView
 
 schema_view = get_schema_view(
@@ -144,5 +145,22 @@ urlpatterns = [
             }
         ),
         name="course-unenroll-student",
+    ),
+    path(
+        "api/question_banks/",
+        QuestionBankViewSet.as_view({"get": "list", "post": "create"}),
+        name="question-banks-list",
+    ),
+    path(
+        "api/question_banks/<int:question_bank_id>/",
+        QuestionBankViewSet.as_view(
+            {
+                "get": "retrieve",
+                "put": "update",
+                "patch": "partial_update",
+                "delete": "destroy",
+            }
+        ),
+        name="question-banks-detail",
     ),
 ]
