@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+from datetime import timedelta
 from os import getenv
 from pathlib import Path
 
@@ -176,3 +177,5 @@ REST_FRAMEWORK = {
         ]
     )
 }
+if not PRODUCTION:
+    SIMPLE_JWT = {"ACCESS_TOKEN_LIFETIME": timedelta(hours=24)}

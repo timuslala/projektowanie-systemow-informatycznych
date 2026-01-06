@@ -35,7 +35,7 @@ class CourseProgressSerializer(serializers.ModelSerializer):
             "student",
             "percent_complete",
             "completed",
-        ]  # completed can be derived or updated separately if needed
+        ]
 
 
 class CourseSerializer(serializers.ModelSerializer):
