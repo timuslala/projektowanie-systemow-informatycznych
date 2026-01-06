@@ -4,7 +4,6 @@ from rest_framework import permissions, serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-from rest_framework.serializers import ModelSerializer
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
@@ -20,18 +19,14 @@ from .permissions import (
 )
 
 
-class StudentSerializer(serializers.ModelSerializer):
+class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = [
-            "id",
-            "name",
-            "surname",
-        ]
+        fields = ["id", "name", "surname", "is_teacher"]
 
 
 class CourseProgressSerializer(serializers.ModelSerializer):
-    student = StudentSerializer(source="user", read_only=True)
+    student = UserInfoSerializer(source="user", read_only=True)
 
     class Meta:
         model = CourseProgress
@@ -48,12 +43,6 @@ class CourseSerializer(serializers.ModelSerializer):
         model = Course
         fields = ["id", "title", "description", "instructor"]
         read_only_fields = ["instructor"]
-
-
-class UserInfoSerializer(ModelSerializer):
-    class Meta:
-        model = User
-        fields = ["id", "name", "surname", "is_teacher"]
 
 
 class UserInfoView(APIView):
@@ -130,7 +119,7 @@ class CourseViewSet(viewsets.ModelViewSet):
         eligible = User.objects.filter(
             is_active=True, is_staff=False, is_teacher=False
         ).exclude(id__in=enrolled_user_ids)
-        serializer = StudentSerializer(eligible, many=True)
+        serializer = UserInfoSerializer(eligible, many=True)
         return Response(serializer.data)
 
     @action(
