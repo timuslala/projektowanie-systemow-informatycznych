@@ -17,7 +17,7 @@ class ModuleSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-@swagger_tags(["modules"])
+@swagger_tags(["courses - modules"])
 class ModuleViewSet(viewsets.ModelViewSet):
     authentication_classes = [JWTAuthentication]
     serializer_class = ModuleSerializer
@@ -42,7 +42,7 @@ class ModuleImageView(APIView):
         IsCourseInstructor | IsStudentEnrolledInCourseReadOnly | permissions.IsAdminUser
     ]
 
-    @swagger_auto_schema(tags=["modules - image"])
+    @swagger_auto_schema(tags=["courses - modules - image"])
     def get(self, request, course_id, module_id):
         try:
             module = Module.objects.get(id=module_id, course__id=course_id)
@@ -51,7 +51,7 @@ class ModuleImageView(APIView):
             return Response({"error": "Module not found"}, status=404)
 
     @swagger_auto_schema(
-        tags=["modules - image"],
+        tags=["courses - modules - image"],
         operation_description="Upload a new image for the module",
         consumes=["multipart/form-data"],
         manual_parameters=[

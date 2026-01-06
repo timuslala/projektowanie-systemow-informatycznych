@@ -103,4 +103,40 @@ urlpatterns = [
             }
         ),
     ),
+    path(
+        "api/courses/<int:course_id>/enrolled-students/",
+        CourseViewSet.as_view(
+            {
+                "get": "enrolled_students",
+            }
+        ),
+        name="course-enrolled-students",
+    ),
+    path(
+        "api/courses/<int:course_id>/eligible-students/",
+        CourseViewSet.as_view(
+            {
+                "get": "eligible_students",
+            }
+        ),
+        name="course-eligible-students",
+    ),
+    path(
+        "api/courses/<int:course_id>/enroll/<int:student_id>/",
+        CourseViewSet.as_view(
+            {
+                "post": "enroll_student",
+            }
+        ),
+        name="course-enroll-student",
+    ),
+    path(
+        "api/courses/<int:course_id>/unenroll/<int:student_id>/",
+        CourseViewSet.as_view(
+            {
+                "delete": "unenroll_student",
+            }
+        ),
+        name="course-unenroll-student",
+    ),
 ]

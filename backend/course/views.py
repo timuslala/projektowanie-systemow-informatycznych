@@ -1,10 +1,14 @@
 from django.shortcuts import get_object_or_404
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import permissions, serializers, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from common.swagger_utils import swagger_tags
+from user.models import User
 
-from .models import Course
+from .models import Course, CourseProgress
 from .permissions import IsCourseInstructor, IsCourseStudentReadOnly
 
 
@@ -12,9 +16,17 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ["id", "title", "description"]
-        # how do i automatically include instructor id while creating course?
-        #
         read_only_fields = ["instructor"]
+
+
+class StudentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "name",
+            "surname",
+        ]  # adjust if your User model uses different fields (e.g., first_name/last_name)
 
 
 @swagger_tags(tags=["courses"])
@@ -47,3 +59,78 @@ class CourseViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(instructor=self.request.user)
+
+    @action(
+        detail=True,
+        methods=["get"],
+        permission_classes=[IsCourseInstructor | permissions.IsAdminUser],
+    )
+    @swagger_auto_schema(tags=["courses - enrollments"])
+    def enrolled_students(self, request, pk=None, **kwargs):
+        """List all students currently enrolled in this course."""
+        course = self.get_object()
+        enrollments = (
+            course.courseprogress_set.all()
+        )  # via related_name or default reverse
+        students = [enrollment.user for enrollment in enrollments]
+        serializer = StudentSerializer(students, many=True)
+        return Response(serializer.data)
+
+    @action(
+        detail=True,
+        methods=["get"],
+        permission_classes=[IsCourseInstructor | permissions.IsAdminUser],
+    )
+    @swagger_auto_schema(tags=["courses - enrollments"])
+    def eligible_students(self, request, pk=None, **kwargs):
+        """List active students who are NOT yet enrolled in this course."""
+        course = self.get_object()
+        enrolled_user_ids = course.courseprogress_set.values_list("user_id", flat=True)
+        eligible = User.objects.filter(
+            is_active=True, is_staff=False, is_teacher=False
+        ).exclude(id__in=enrolled_user_ids)
+        serializer = StudentSerializer(eligible, many=True)
+        return Response(serializer.data)
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="enroll/(?P<student_id>\\d+)",
+        permission_classes=[IsCourseInstructor | permissions.IsAdminUser],
+    )
+    @swagger_auto_schema(tags=["courses - enrollments"])
+    def enroll_student(self, request, pk=None, student_id=None, **kwargs):
+        """Enroll a student in the course."""
+        course = self.get_object()
+        try:
+            student = User.objects.get(
+                id=student_id, is_active=True, is_staff=False, is_teacher=False
+            )
+        except User.DoesNotExist:
+            return Response({"detail": "Eligible student not found."}, status=404)
+
+        progress, created = CourseProgress.objects.get_or_create(
+            user=student, course=course, defaults={"percent_complete": 0.0}
+        )
+        if created:
+            return Response({"detail": "Student enrolled successfully."}, status=201)
+        return Response({"detail": "Student is already enrolled."}, status=400)
+
+    @action(
+        detail=True,
+        methods=["delete"],
+        url_path="unenroll/(?P<student_id>\\d+)",
+        permission_classes=[IsCourseInstructor | permissions.IsAdminUser],
+    )
+    @swagger_auto_schema(tags=["courses - enrollments"])
+    def unenroll_student(self, request, pk=None, student_id=None, **kwargs):
+        """Remove (unenroll) a student from the course."""
+        course = self.get_object()
+        try:
+            progress = CourseProgress.objects.get(user_id=student_id, course=course)
+            progress.delete()
+            return Response({"detail": "Student unenrolled successfully."})
+        except CourseProgress.DoesNotExist:
+            return Response(
+                {"detail": "Student is not enrolled in this course."}, status=404
+            )
