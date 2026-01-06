@@ -1,5 +1,6 @@
-import random
+import secrets
 
+from django.conf import settings
 from django.core.mail import send_mail
 from django.utils.translation import gettext_lazy as _
 from drf_yasg import openapi
@@ -27,15 +28,25 @@ class RegisterSerializer(ModelSerializer):
             surname=validated_data["surname"],
             is_teacher=validated_data["is_teacher"],
             is_active=False,
-            validation_code=random.randint(100000, 999999),
+            validation_code=secrets.token_hex(32),
         )
+        link = f"http://localhost:8000/accounts/validate/?email={user.email}&code={user.validation_code}"
+        body = f"""Your validation link:
+
+        {link}
+        """
+
         send_mail(
-            "Email Validation",
-            f"Your validation link is: http://localhost:3000/api/validate?email={user.email}&code={user.validation_code}",
-            "from@example.com",
-            [user.email],
-            fail_silently=False,
+            subject="Email Validation",
+            message=body,
+            from_email="from@example.com",
+            recipient_list=[user.email],
         )
+        if not settings.PRODUCTION:
+            print(
+                "Copy link from here cause of some stuff how console email backend prints emails"
+            )
+            print(link)
         return user
 
 
@@ -73,10 +84,12 @@ class EmailValidationView(generics.GenericAPIView):
         print(email, code)
         if User.objects.filter(email=email).exists():
             user = User.objects.get(email=email)
+            if user.is_active:
+                return Response({"message": _("User already active")}, status=400)
             if str(user.validation_code) != str(code):
                 return Response({"code": _("Invalid validation code")}, status=400)
             user.is_active = True
-            user.validation_code = ""
+            user.validation_code = None
             user.save()
             return Response({"message": _("Email confirmed")}, status=200)
         return Response(

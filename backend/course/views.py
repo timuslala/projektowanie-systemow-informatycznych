@@ -15,7 +15,7 @@ from .permissions import IsCourseInstructor, IsCourseStudentReadOnly
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
-        fields = ["id", "title", "description"]
+        fields = ["id", "title", "description", "instructor"]
         read_only_fields = ["instructor"]
 
 
@@ -26,7 +26,20 @@ class StudentSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "surname",
-        ]  # adjust if your User model uses different fields (e.g., first_name/last_name)
+        ]
+
+
+class CourseProgressSerializer(serializers.ModelSerializer):
+    student = StudentSerializer(source="user", read_only=True)
+
+    class Meta:
+        model = CourseProgress
+        fields = ["student", "percent_complete", "completed"]
+        read_only_fields = [
+            "student",
+            "percent_complete",
+            "completed",
+        ]  # completed can be derived or updated separately if needed
 
 
 @swagger_tags(tags=["courses"])
@@ -98,7 +111,10 @@ class CourseViewSet(viewsets.ModelViewSet):
         url_path="enroll/(?P<student_id>\\d+)",
         permission_classes=[IsCourseInstructor | permissions.IsAdminUser],
     )
-    @swagger_auto_schema(tags=["courses - enrollments"])
+    @swagger_auto_schema(
+        tags=["courses - enrollments"],
+        request_body=None,
+    )
     def enroll_student(self, request, pk=None, student_id=None, **kwargs):
         """Enroll a student in the course."""
         course = self.get_object()

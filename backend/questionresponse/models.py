@@ -9,3 +9,5 @@ class QuestionResponse(models.Model):
     selected_option = models.PositiveSmallIntegerField(
         null=True, blank=True
     )  # For multiple choice questions
+    instructor_comment = models.TextField(null=True, blank=True)
+    points = models.DecimalField(max_digits=6, decimal_places=2, default=0)

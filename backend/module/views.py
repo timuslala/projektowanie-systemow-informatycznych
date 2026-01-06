@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import permissions, serializers, viewsets
@@ -14,7 +15,8 @@ from .permissions import IsCourseInstructor, IsStudentEnrolledInCourseReadOnly
 class ModuleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Module
-        fields = "__all__"
+        fields = ["id", "name", "content", "photo_url"]
+        read_only_fields = ["photo_url"]
 
 
 @swagger_tags(["courses - modules"])
@@ -35,6 +37,15 @@ class ModuleViewSet(viewsets.ModelViewSet):
         return (
             Module.objects.all()
         )  # incoherency cause url patterns dont allow this case but left for future extensibility
+
+    def get_object(self):
+        obj = get_object_or_404(self.get_queryset())
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+    def perform_create(self, serializer):
+        course_id = self.kwargs.get("course_id")
+        serializer.save(course_id=course_id)
 
 
 class ModuleImageView(APIView):
@@ -68,7 +79,7 @@ class ModuleImageView(APIView):
     def post(self, request, course_id, module_id):
         try:
             fileobj = request.FILES["image"]
-            if fileobj.content_type != "image/png":
+            if not fileobj.name.lower().endswith(".png"):
                 return Response({"status": "Only PNG images are allowed"}, status=400)
             module = Module.objects.get(id=module_id, course__id=course_id)
             module.upload_photo(fileobj)
