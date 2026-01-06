@@ -167,13 +167,3 @@ class CourseViewSet(viewsets.ModelViewSet):
             return Response(
                 {"detail": "Student is not enrolled in this course."}, status=404
             )
-
-    @action(
-        detail=True,
-        methods=["get"],
-        permission_classes=[
-            IsCourseStudentReadOnly | IsCourseInstructor | permissions.IsAdminUser
-        ],
-    )
-    def my_enrollments(self, request, pk=None, **kwargs):
-        pass
