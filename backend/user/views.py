@@ -9,8 +9,24 @@ from rest_framework import generics
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer
+from rest_framework.views import APIView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .models import User
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        token["email"] = user.email
+        token["name"] = user.name
+        token["surname"] = user.surname
+        token["is_teacher"] = user.is_teacher
+
+        return token
 
 
 class RegisterSerializer(ModelSerializer):
@@ -48,6 +64,10 @@ class RegisterSerializer(ModelSerializer):
             )
             print(link)
         return user
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 class RegisterView(generics.CreateAPIView):

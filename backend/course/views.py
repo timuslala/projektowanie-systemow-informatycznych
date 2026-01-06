@@ -12,13 +12,6 @@ from .models import Course, CourseProgress
 from .permissions import IsCourseInstructor, IsCourseStudentReadOnly
 
 
-class CourseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Course
-        fields = ["id", "title", "description", "instructor"]
-        read_only_fields = ["instructor"]
-
-
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -40,6 +33,23 @@ class CourseProgressSerializer(serializers.ModelSerializer):
             "percent_complete",
             "completed",
         ]  # completed can be derived or updated separately if needed
+
+
+class CourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = ["id", "title", "description", "instructor"]
+        read_only_fields = ["instructor"]
+
+
+class UserInfoSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "name", "surname", "is_teacher"]
+
+
+class UserInfoView(APIView):
+    authentication_classes = []
 
 
 @swagger_tags(tags=["courses"])
@@ -85,8 +95,7 @@ class CourseViewSet(viewsets.ModelViewSet):
         enrollments = (
             course.courseprogress_set.all()
         )  # via related_name or default reverse
-        students = [enrollment.user for enrollment in enrollments]
-        serializer = StudentSerializer(students, many=True)
+        serializer = CourseProgressSerializer(enrollments, many=True)
         return Response(serializer.data)
 
     @action(
@@ -150,3 +159,13 @@ class CourseViewSet(viewsets.ModelViewSet):
             return Response(
                 {"detail": "Student is not enrolled in this course."}, status=404
             )
+
+    @action(
+        detail=True,
+        methods=["get"],
+        permission_classes=[
+            IsCourseStudentReadOnly | IsCourseInstructor | permissions.IsAdminUser
+        ],
+    )
+    def my_enrollments(self, request, pk=None, **kwargs):
+        pass

@@ -22,13 +22,12 @@ from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 from rest_framework_simplejwt.views import (
     TokenBlacklistView,
-    TokenObtainPairView,
     TokenRefreshView,
 )
 
 from course.views import CourseViewSet
 from module.views import ModuleImageView, ModuleViewSet
-from user.views import EmailValidationView, RegisterView
+from user.views import CustomTokenObtainPairView, EmailValidationView, RegisterView
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -45,7 +44,9 @@ schema_view = get_schema_view(
 )
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("accounts/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path(
+        "accounts/token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"
+    ),
     path("accounts/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("accounts/logout/", TokenBlacklistView.as_view(), name="token_blacklist"),
     path("accounts/register/", RegisterView.as_view(), name="register"),
