@@ -2,14 +2,22 @@ from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import permissions, serializers, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
+from rest_framework.serializers import ModelSerializer
+from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from common.swagger_utils import swagger_tags
 from user.models import User
 
 from .models import Course, CourseProgress
-from .permissions import IsCourseInstructor, IsCourseStudentReadOnly
+from .permissions import (
+    IsCourseInstructor,
+    IsCourseStudentReadOnly,
+    IsEnrolledToCourseTaughtByInstructor,
+    IsInstructor,
+)
 
 
 class StudentSerializer(serializers.ModelSerializer):
@@ -49,7 +57,18 @@ class UserInfoSerializer(ModelSerializer):
 
 
 class UserInfoView(APIView):
-    authentication_classes = []
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [
+        IsEnrolledToCourseTaughtByInstructor | IsInstructor | permissions.IsAdminUser
+    ]
+
+    def get(self, request, **kwargs):
+        user_id = self.kwargs.get("user_id")
+        user = User.objects.filter(id=user_id).first()
+        if user == None:
+            raise PermissionDenied
+        self.check_object_permissions(self.request, user)
+        return Response(data=UserInfoSerializer(user).data, status=200)
 
 
 @swagger_tags(tags=["courses"])

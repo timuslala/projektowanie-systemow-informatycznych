@@ -42,7 +42,8 @@ class CourseViewSetTests(APITestCase):
             completed=False,
             percent_complete=0.0,
         )
-        self.url = f"/api/course/{self.course.id}"
+        self.url = f"/api/courses/{self.course.id}"
+
         self.admin_client = APIClient()
         self.admin_client.force_authenticate(user=self.admin_user)
 
@@ -146,3 +147,47 @@ class CourseViewSetTests(APITestCase):
     def test_delete_course_as_non_enrolled_student_not_found(self):
         response = self.other_student_client.delete(self.url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    # user info checks tests
+    def test_check_admin_user_info_from_unrelated_student_forbidden(self):
+        response = self.other_student_client.get(
+            f"/accounts/check_user_info/{self.admin_user.id}/"
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_check_instructor_info_from_unrelated_student_forbidden(self):
+        response = self.other_student_client.get(
+            f"/accounts/check_user_info/{self.instructor_user.id}/"
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_check_instructor_info_from_related_student_ok(self):
+        response = self.student_client.get(
+            f"/accounts/check_user_info/{self.instructor_user.id}/"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_check_student_info_from_instructor_ok(self):
+        response = self.instructor_client.get(
+            f"/accounts/check_user_info/{self.student_user.id}/"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_check_student_info_from_admin_ok(self):
+        response = self.admin_client.get(
+            f"/accounts/check_user_info/{self.student_user.id}/"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_check_non_existant_info_from_instructor_forbidden(self):
+        response = self.instructor_client.get(f"/accounts/check_user_info/999/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_user_not_found_same_response_as_insufficient_permissions(self):
+        response = self.instructor_client.get(f"/accounts/check_user_info/999/")
+        response2 = self.other_student_client.get(
+            f"/accounts/check_user_info/{self.instructor_user.id}/"
+        )
+        self.assertEqual(response.data, response2.data)
+        self.assertEqual(response.status_code, response2.status_code)
+        self.assertEqual(response.headers, response2.headers)

@@ -25,7 +25,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
-from course.views import CourseViewSet
+from course.views import CourseViewSet, UserInfoView
 from module.views import ModuleImageView, ModuleViewSet
 from user.views import CustomTokenObtainPairView, EmailValidationView, RegisterView
 
@@ -51,6 +51,11 @@ urlpatterns = [
     path("accounts/logout/", TokenBlacklistView.as_view(), name="token_blacklist"),
     path("accounts/register/", RegisterView.as_view(), name="register"),
     path("accounts/validate/", EmailValidationView.as_view(), name="email-validate"),
+    path(
+        "accounts/check_user_info/<int:user_id>/",
+        UserInfoView.as_view(),
+        name="user_info",
+    ),
     re_path(
         r"^swagger(?P<format>\.json|\.yaml)$",
         schema_view.without_ui(cache_timeout=0),
