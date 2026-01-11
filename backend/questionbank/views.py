@@ -17,7 +17,7 @@ class QuestionBankSerializer(ModelSerializer):
         read_only_fields = ["id", "number_of_questions"]
 
     def get_number_of_questions(self, obj):
-        return obj.questions.count()
+        return obj.question_set.count()
 
 
 class QuestionBankViewSet(ModelViewSet):
@@ -25,6 +25,7 @@ class QuestionBankViewSet(ModelViewSet):
     authentication_classes = [JWTAuthentication]
     serializer_class = QuestionBankSerializer
     permission_classes = [IsInstructor | IsAdminUser]
+    lookup_url_kwarg = "question_bank_id"
 
     def get_queryset(self):
         question_bank_id = self.kwargs.get("question_bank_id")
@@ -35,3 +36,6 @@ class QuestionBankViewSet(ModelViewSet):
         if question_bank_id:
             qbs = qbs.filter(id=question_bank_id)
         return qbs
+
+    def perform_create(self, serializer):
+        return serializer.save(user=self.request.user)
