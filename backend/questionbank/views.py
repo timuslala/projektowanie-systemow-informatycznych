@@ -13,8 +13,8 @@ class QuestionBankSerializer(ModelSerializer):
 
     class Meta:
         model = QuestionBank
-        fields = ["id", "title", "number_of_questions"]
-        read_only_fields = ["id", "number_of_questions"]
+        fields = ["id", "title", "number_of_questions", "question_set"]
+        read_only_fields = ["id", "number_of_questions", "question_set"]
 
     def get_number_of_questions(self, obj):
         return obj.question_set.count()
