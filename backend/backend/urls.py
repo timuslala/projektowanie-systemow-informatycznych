@@ -163,4 +163,9 @@ urlpatterns = [
         ),
         name="question-banks-detail",
     ),
+    path(
+        "api/question_banks/<int:question_bank_id>/questions/",
+        QuestionBankViewSet.as_view({"get": "questions"}),
+        name="question-banks-detail-with-questions",
+    ),
 ]

@@ -34,15 +34,16 @@ class QuestionBankViewSetTests(APITestCase):
             title="Test Questionbank", user=self.instructor_user
         )
         self.question1 = Question.objects.create(
-            text="question text1", question_bank=self.questionbank, is_open_ended=False
+            text="question text1", question_bank=self.questionbank, question_type="open"
         )
         self.question2 = Question.objects.create(
-            text="question text2", question_bank=self.questionbank, is_open_ended=False
+            text="question text2", question_bank=self.questionbank, question_type="open"
+        )
+        self.question3 = Question.objects.create(
+            text="question text3", question_bank=self.questionbank, question_type="mcq"
         )
         self.multiple_choice_question = MultipleChoiceOption.objects.create(
-            text="multiple choice question",
-            question_bank=self.questionbank,
-            is_open_ended=True,
+            question=self.question3,
             option1="1",
             option2="2",
             option3="3",
@@ -72,16 +73,54 @@ class QuestionBankViewSetTests(APITestCase):
                 "question_set": [
                     self.question1.id,
                     self.question2.id,
-                    self.multiple_choice_question.id,
+                    self.question3.id,
                 ],
             },
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_question_bank_as_instructor(self):
-        response = self.admin_client.get(self.url)
+        response = self.instructor_client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_question_bank_as_user(self):
         response = self.student_client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_question_bank_questions_as_instructor(self):
+        response = self.instructor_client.get(self.url + "questions/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data,
+            {
+                "count": 3,
+                "next": None,
+                "previous": None,
+                "results": [
+                    {
+                        "id": self.question1.id,
+                        "text": self.question1.text,
+                        "question_type": self.question1.question_type,
+                        "mcq": None,
+                    },
+                    {
+                        "id": self.question2.id,
+                        "text": self.question2.text,
+                        "question_type": self.question2.question_type,
+                        "mcq": None,
+                    },
+                    {
+                        "id": self.question3.id,
+                        "text": self.question3.text,
+                        "question_type": self.question3.question_type,
+                        "mcq": {
+                            "option1": self.multiple_choice_question.option1,
+                            "option2": self.multiple_choice_question.option2,
+                            "option3": self.multiple_choice_question.option3,
+                            "option4": self.multiple_choice_question.option4,
+                            "correct_option": self.multiple_choice_question.correct_option,
+                        },
+                    },
+                ],
+            },
+        )
