@@ -124,3 +124,9 @@ class QuestionBankViewSetTests(APITestCase):
                 ],
             },
         )
+
+    def test_get_non_existing_questionbank_details_as_admin(self):
+        response = self.admin_client.get(
+            f"/api/question_banks/{self.questionbank.id+1}/questions/"
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
