@@ -16,13 +16,14 @@ from .permissions import (
     IsCourseInstructor,
     IsCourseStudentReadOnly,
     IsEnrolledToCourseTaughtByInstructor,
+    IsSameUser,
 )
 
 
 class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "name", "surname", "is_teacher"]
+        fields = ["id", "name", "surname", "is_teacher", "is_superuser", "is_staff"]
 
 
 class CourseProgressSerializer(serializers.ModelSerializer):
@@ -39,16 +40,40 @@ class CourseProgressSerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
+    progress = serializers.SerializerMethodField()
+    students_count = serializers.SerializerMethodField()
+    modules_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Course
-        fields = ["id", "title", "description", "instructor"]
+        fields = ["id", "title", "description", "instructor", "progress", "students_count", "modules_count"]
         read_only_fields = ["instructor"]
+
+    def get_progress(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated and not getattr(request.user, "is_teacher", False):
+            try:
+                # Assuming reverse relation is courseprogress_set
+                progress = obj.courseprogress_set.get(user=request.user)
+                return progress.percent_complete
+            except CourseProgress.DoesNotExist:
+                return 0
+        return None
+
+    def get_students_count(self, obj):
+        return obj.courseprogress_set.count()
+
+    def get_modules_count(self, obj):
+        return obj.module_set.count()
 
 
 class UserInfoView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [
-        IsEnrolledToCourseTaughtByInstructor | IsInstructor | permissions.IsAdminUser
+        IsSameUser
+        | IsEnrolledToCourseTaughtByInstructor
+        | IsInstructor
+        | permissions.IsAdminUser
     ]
 
     def get(self, request, **kwargs):

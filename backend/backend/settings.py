@@ -33,7 +33,7 @@ AWS_REGION = getenv("AWS_REGION", "us-east-1")
 AWS_STORAGE_BUCKET_NAME = getenv("AWS_STORAGE_BUCKET_NAME", "local-bucket")
 # Only LocalStack needs this; harmless in AWS if unset
 AWS_S3_ENDPOINT_URL = getenv("AWS_S3_ENDPOINT_URL", "http://localhost:4566")
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "drf_yasg",
     "django.contrib.postgres",
+    "corsheaders",
     "user",
     "rest_framework",
     "course",
@@ -80,6 +81,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -167,15 +169,13 @@ USE_TZ = True
 STATIC_URL = "static/"
 # settings.py
 
-REST_FRAMEWORK = {
-    "DEFAULT_RENDERER_CLASSES": (
-        ["rest_framework.renderers.JSONRenderer"]
-        if not PRODUCTION
-        else [
-            "rest_framework.renderers.JSONRenderer",
-            "rest_framework.renderers.BrowsableAPIRenderer",
-        ]
+REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = (
+    (
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
     )
-}
+    if not PRODUCTION
+    else ("rest_framework.renderers.JSONRenderer",)
+)
 if not PRODUCTION:
     SIMPLE_JWT = {"ACCESS_TOKEN_LIFETIME": timedelta(hours=24)}

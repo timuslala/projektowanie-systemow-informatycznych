@@ -28,6 +28,7 @@ from rest_framework_simplejwt.views import (
 from course.views import CourseViewSet, UserInfoView
 from module.views import ModuleImageView, ModuleViewSet
 from questionbank.views import QuestionBankViewSet
+from quiz.views import QuizViewSet
 from user.views import CustomTokenObtainPairView, EmailValidationView, RegisterView
 
 schema_view = get_schema_view(
@@ -162,5 +163,22 @@ urlpatterns = [
             }
         ),
         name="question-banks-detail",
+    ),
+    path(
+        "api/quizzes/",
+        QuizViewSet.as_view({"get": "list", "post": "create"}),
+        name="quiz-list",
+    ),
+    path(
+        "api/quizzes/<int:pk>/",
+        QuizViewSet.as_view(
+            {
+                "get": "retrieve",
+                "put": "update",
+                "patch": "partial_update",
+                "delete": "destroy",
+            }
+        ),
+        name="quiz-detail",
     ),
 ]

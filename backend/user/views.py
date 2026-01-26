@@ -8,7 +8,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ModelSerializer, CharField
 from rest_framework.views import APIView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -17,6 +17,16 @@ from .models import User
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["username"].required = False
+        self.fields["email"] = CharField(required=False)
+
+    def validate(self, attrs):
+        if "email" in attrs:
+            attrs["username"] = attrs["email"]
+        return super().validate(attrs)
+
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
@@ -46,7 +56,7 @@ class RegisterSerializer(ModelSerializer):
             is_active=False,
             validation_code=secrets.token_hex(32),
         )
-        link = f"http://localhost:8000/accounts/validate/?email={user.email}&code={user.validation_code}"
+        link = f"http://localhost:5173/verify-email?email={user.email}&code={user.validation_code}"
         body = f"""Your validation link:
 
         {link}

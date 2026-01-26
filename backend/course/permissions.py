@@ -24,3 +24,8 @@ class IsCourseStudentReadOnly(permissions.BasePermission):
 class IsEnrolledToCourseTaughtByInstructor(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         return request.user.courseprogress_set.filter(course__instructor=obj).exists()
+
+
+class IsSameUser(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return request.user == obj
