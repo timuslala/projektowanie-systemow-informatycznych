@@ -14,7 +14,7 @@ interface Course {
 
 interface QuestionBank {
     id: number;
-    name: string;
+    title: string;
 }
 
 export const CreateTestPage = () => {
@@ -86,25 +86,25 @@ export const CreateTestPage = () => {
                 leftIcon={<ArrowLeft className="w-4 h-4" />}
                 onClick={() => navigate(-1)}
             >
-                Back to Dashboard
+                Powrót do panelu kontrolnego
             </Button>
 
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">Create New Test</h1>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">Tworzenie nowego quizu</h1>
 
             <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2 space-y-6">
-                        <Card title="Test Details">
+                        <Card title="Quiz Details">
                             <div className="space-y-4">
                                 <Input
-                                    label="Test Title"
+                                    label="Tytuł quizu"
                                     value={formData.title}
                                     onChange={e => setFormData({ ...formData, title: e.target.value })}
                                     required
                                 />
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Description</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Opis</label>
                                     <textarea
                                         className="w-full bg-white text-slate-900 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none p-3 h-32 resize-none placeholder-slate-400"
                                         value={formData.description}
@@ -114,7 +114,7 @@ export const CreateTestPage = () => {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <Input
-                                        label="Time Limit (minutes)"
+                                        label="Limit czasowy (minuty)"
                                         type="number"
                                         leftIcon={<Clock className="w-4 h-4" />}
                                         value={formData.time_limit_in_minutes}
@@ -122,14 +122,14 @@ export const CreateTestPage = () => {
                                     />
 
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-1.5">Course</label>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1.5">Kurs</label>
                                         <select
                                             className="w-full bg-white text-slate-900 border border-slate-200 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none"
                                             value={formData.course}
                                             onChange={e => setFormData({ ...formData, course: e.target.value })}
                                             required
                                         >
-                                            <option value="">Select a Course...</option>
+                                            <option value="">Wybierz kurs...</option>
                                             {courses.map(c => (
                                                 <option key={c.id} value={c.id}>{c.title}</option>
                                             ))}
@@ -145,7 +145,7 @@ export const CreateTestPage = () => {
                                             checked={formData.randomize_question_order}
                                             onChange={e => setFormData({ ...formData, randomize_question_order: e.target.checked })}
                                         />
-                                        Randomize question order
+                                        Losuj kolejność pytań
                                     </label>
                                     <label className="flex items-center text-slate-700 cursor-pointer select-none">
                                         <input
@@ -154,15 +154,15 @@ export const CreateTestPage = () => {
                                             checked={formData.show_correct_answers_on_completion}
                                             onChange={e => setFormData({ ...formData, show_correct_answers_on_completion: e.target.checked })}
                                         />
-                                        Show correct answers after completion
+                                        Pokaż poprawne odpowiedzi po zakończeniu
                                     </label>
                                 </div>
                             </div>
                         </Card>
 
-                        <Card title="Select Question Banks">
+                        <Card title="Wybierz bazę pytań">
                             <div className="space-y-2 max-h-60 overflow-y-auto">
-                                {questionBanks.length === 0 && <p className="text-slate-500 italic">No question banks available.</p>}
+                                {questionBanks.length === 0 && <p className="text-slate-500 italic">Brak dostępnych baz pytań.</p>}
                                 {questionBanks.map(bank => (
                                     <div
                                         key={bank.id}
@@ -176,10 +176,10 @@ export const CreateTestPage = () => {
                                     >
                                         <div className="flex items-center gap-3">
                                             <HelpCircle className="w-5 h-5 text-slate-400" />
-                                            <span className="text-slate-900">{bank.name}</span>
+                                            <span className="text-slate-900">{bank.title}</span>
                                         </div>
                                         {formData.question_banks.includes(bank.id.toString()) && (
-                                            <span className="text-indigo-600 text-xs font-bold">SELECTED</span>
+                                            <span className="text-indigo-600 text-xs font-bold">WYBRANY</span>
                                         )}
                                     </div>
                                 ))}
@@ -188,9 +188,9 @@ export const CreateTestPage = () => {
                     </div>
 
                     <div className="space-y-6">
-                        <Card>
+                        <Card title="Utwórz quiz">
                             <Button type="submit" className="w-full" isLoading={loading} leftIcon={<Save className="w-4 h-4" />}>
-                                Create Test
+                                Utwórz quiz
                             </Button>
                         </Card>
                     </div>

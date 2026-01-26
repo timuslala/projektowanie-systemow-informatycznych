@@ -29,6 +29,7 @@ from course.views import CourseViewSet, UserInfoView
 from module.views import ModuleImageView, ModuleViewSet
 from questionbank.views import QuestionBankViewSet
 from quiz.views import QuizViewSet
+from question.views import QuestionViewSet
 from user.views import CustomTokenObtainPairView, EmailValidationView, RegisterView
 
 schema_view = get_schema_view(
@@ -180,5 +181,37 @@ urlpatterns = [
             }
         ),
         name="quiz-detail",
+    ),
+    path(
+        "api/question_banks/<int:question_bank_id>/questions/",
+        QuestionBankViewSet.as_view({"get": "questions"}),
+        name="question-banks-questions",
+    ),
+    path(
+        "api/quizzes/<int:pk>/questions/",
+        QuizViewSet.as_view({"get": "questions"}),
+        name="quiz-questions",
+    ),
+    path(
+        "api/quizzes/<int:pk>/submit/",
+        QuizViewSet.as_view({"post": "submit"}),
+        name="quiz-submit",
+    ),
+    path(
+        "api/questions/",
+        QuestionViewSet.as_view({"get": "list", "post": "create"}),
+        name="question-list",
+    ),
+    path(
+        "api/questions/<int:pk>/",
+        QuestionViewSet.as_view(
+            {
+                "get": "retrieve",
+                "put": "update",
+                "patch": "partial_update",
+                "delete": "destroy",
+            }
+        ),
+        name="question-detail",
     ),
 ]

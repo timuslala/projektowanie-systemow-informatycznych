@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
-import { PlusCircle, HelpCircle, Clock } from 'lucide-react';
+import { PlusCircle, HelpCircle } from 'lucide-react';
 import api from '../../services/api';
 
 interface Course {
@@ -34,7 +34,7 @@ export const TeacherDashboard = () => {
     }, []);
 
     if (loading) {
-        return <div className="text-slate-500 text-center mt-10">Loading dashboard...</div>;
+        return <div className="text-slate-500 text-center mt-10">Ładowanie panelu...</div>;
     }
 
     return (
@@ -48,27 +48,20 @@ export const TeacherDashboard = () => {
                         leftIcon={<HelpCircle className="w-4 h-4" />}
                         className="border-slate-300 text-slate-700 hover:bg-slate-50"
                     >
-                        Question Banks
+                        Banki pytań
                     </Button>
-                    <Button
-                        variant="outline"
-                        onClick={() => navigate('/quizzes')}
-                        leftIcon={<Clock className="w-4 h-4" />}
-                        className="border-slate-300 text-slate-700 hover:bg-slate-50"
-                    >
-                        Quizzes
-                    </Button>
+
                     <Button
                         onClick={() => navigate('/courses/create')}
                         leftIcon={<PlusCircle className="w-4 h-4" />}
                     >
-                        Create New Course
+                        Utwórz nowy kurs
                     </Button>
                 </div>
             </div>
 
             {courses.length === 0 ? (
-                <div className="text-slate-500 text-center italic">You haven't created any courses yet.</div>
+                <div className="text-slate-500 text-center italic">Nie utworzyłeś żadnego kursu.</div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {courses.map((course) => (
@@ -97,15 +90,20 @@ export const TeacherDashboard = () => {
                                     </div>
 
                                     <div className="space-y-3">
-                                        {/* Mock modules to match student view style */}
-                                        {Array.from({ length: Math.min(course.modules_count || 4, 4) }).map((_, idx) => (
-                                            <div key={idx} className="flex justify-between text-sm">
-                                                <span className="text-slate-900 font-medium">Moduł {idx + 1}</span>
-                                                <span className="text-slate-900 font-medium">0%</span>
-                                            </div>
-                                        ))}
-                                        {course.modules_count > 4 && (
-                                            <div className="text-xs text-slate-500">...and {course.modules_count - 4} more</div>
+                                        {course.modules_count > 0 ? (
+                                            <>
+                                                {Array.from({ length: Math.min(course.modules_count, 4) }).map((_, idx) => (
+                                                    <div key={idx} className="flex justify-between text-sm">
+                                                        <span className="text-slate-900 font-medium">Moduł {idx + 1}</span>
+                                                        <span className="text-slate-900 font-medium">0%</span>
+                                                    </div>
+                                                ))}
+                                                {course.modules_count > 4 && (
+                                                    <div className="text-xs text-slate-500">...i {course.modules_count - 4} więcej</div>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <p className="text-sm text-slate-500 italic">Brak modułów dla kursu</p>
                                         )}
                                     </div>
                                 </div>

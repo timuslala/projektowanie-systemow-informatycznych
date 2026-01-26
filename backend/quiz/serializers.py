@@ -26,6 +26,18 @@ class QuestionSerializer(serializers.ModelSerializer):
             ]
         return None
 
+class FullQuestionSerializer(QuestionSerializer):
+    correct_option = serializers.SerializerMethodField()
+
+    class Meta(QuestionSerializer.Meta):
+        fields = QuestionSerializer.Meta.fields + ['correct_option', 'tags']
+
+    def get_correct_option(self, obj):
+        if hasattr(obj, 'multiplechoiceoption'):
+            return obj.multiplechoiceoption.correct_option
+        return None
+
+
 class QuizSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quiz

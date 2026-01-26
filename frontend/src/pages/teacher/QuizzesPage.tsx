@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
@@ -15,6 +15,7 @@ interface Quiz {
 
 export const QuizzesPage = () => {
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -65,7 +66,11 @@ export const QuizzesPage = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {quizzes.map((quiz) => (
-                        <Card key={quiz.id} className="group hover:border-indigo-300 transition-all duration-300">
+                        <Card
+                            key={quiz.id}
+                            onClick={() => navigate(`/quizzes/${quiz.id}`)}
+                            className="group hover:border-indigo-300 transition-all duration-300 cursor-pointer"
+                        >
                             <div className="flex items-start justify-between">
                                 <div className="flex gap-4">
                                     <div className="p-3 rounded-lg bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100 transition-colors">

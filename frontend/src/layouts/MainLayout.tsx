@@ -12,7 +12,6 @@ export const MainLayout: FC<{ children: ReactNode }> = ({ children }) => {
             </main>
 
             <footer className="border-t border-white/5 py-8 text-center text-sm text-[#94a3b8]">
-                <p>&copy; {new Date().getFullYear()} LMS Pro. All rights reserved.</p>
             </footer>
         </div>
     );

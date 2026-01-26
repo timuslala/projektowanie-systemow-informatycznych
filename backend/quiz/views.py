@@ -25,7 +25,9 @@ class QuizViewSet(viewsets.ModelViewSet):
 
         # Teachers see quizzes for their courses
         # Students see quizzes for courses they are enrolled in
-        if getattr(user, 'is_teacher', False) or user.is_staff: # Added is_staff based on common Django patterns, or just rely on existing is_teacher
+        if user.is_staff:
+            pass # Staff (admins) can see all quizzes
+        elif getattr(user, 'is_teacher', False):
              queryset = queryset.filter(course__instructor=user)
         else:
              # For students, we need to filter by enrollment

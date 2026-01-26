@@ -33,7 +33,7 @@ export const StudentDashboard = () => {
     }, []);
 
     if (loading) {
-        return <div className="text-slate-500 text-center mt-10">Loading your courses...</div>;
+        return <div className="text-slate-500 text-center mt-10">Ładowanie kursów...</div>;
     }
 
     return (
@@ -41,7 +41,7 @@ export const StudentDashboard = () => {
             <h1 className="text-3xl font-bold text-center text-slate-900">Zapisane kursy</h1>
 
             {courses.length === 0 ? (
-                <div className="text-slate-500 text-center italic">You are not enrolled in any courses yet.</div>
+                <div className="text-slate-500 text-center italic">Nie jesteś zapisany na żaden kurs.</div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
                     {courses.map((course) => (
@@ -64,16 +64,12 @@ export const StudentDashboard = () => {
                                     </div>
 
                                     <div className="space-y-3">
-                                        {[1, 2, 3, 4].map((modNum) => (
-                                            <div key={modNum} className="flex justify-between text-sm">
-                                                <span className="text-slate-900 font-medium">Moduł {modNum}</span>
-                                                <span className="text-slate-900 font-medium">
-                                                    {/* Mocking module progress relative to course progress for display similarity */}
-                                                    {modNum <= Math.floor(((course.progress || 0) / 100) * 4) ? '100%' :
-                                                        modNum === Math.ceil(((course.progress || 0) / 100) * 4) ? `${(course.progress || 0) % 25 * 4}%` : '0%'}
-                                                </span>
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-slate-900 font-medium">Liczba modułów</span>
+                                                <span className="text-slate-900 font-medium">{course.modules_count}</span>
                                             </div>
-                                        ))}
+                                        </div>
                                     </div>
                                 </div>
                             </div>

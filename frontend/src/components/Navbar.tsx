@@ -21,12 +21,12 @@ export const Navbar = () => {
     const getLinks = () => {
         if (user?.role === 'teacher') {
             return [
-                { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
-                { path: '/courses/create', label: 'New Course', icon: <PlusCircle className="w-4 h-4" /> },
+                { path: '/dashboard', label: 'Panel', icon: <LayoutDashboard className="w-4 h-4" /> },
+                { path: '/courses/create', label: 'Nowy kurs', icon: <PlusCircle className="w-4 h-4" /> },
             ];
         }
         return [
-            { path: '/dashboard', label: 'My Learning', icon: <BookOpen className="w-4 h-4" /> },
+            { path: '/dashboard', label: 'Moje kursy', icon: <BookOpen className="w-4 h-4" /> },
         ];
     };
 
@@ -42,7 +42,7 @@ export const Navbar = () => {
                                 <BookOpen className="h-5 w-5 text-white" />
                             </div>
                             <span className="text-xl font-bold">
-                                LMS Pro
+                                E-Learning
                             </span>
                         </Link>
 
@@ -132,7 +132,7 @@ export const Navbar = () => {
                             className="flex w-full items-center gap-3 px-4 py-3 text-[#ef4444] hover:bg-red-500/10 rounded-lg transition-colors"
                         >
                             <LogOut className="h-5 w-5" />
-                            Sign Out
+                            Wyloguj się
                         </button>
                     </div>
                 </div>

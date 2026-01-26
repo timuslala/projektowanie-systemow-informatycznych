@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/Button';
+import { ArrowLeft } from 'lucide-react';
 import api from '../../services/api';
 
 export const CreateCoursePage = () => {
@@ -28,6 +29,15 @@ export const CreateCoursePage = () => {
 
     return (
         <div className="max-w-[800px] mx-auto py-12 animate-fade-in">
+            <Button
+                variant="ghost"
+                className="mb-8 text-slate-600 hover:text-slate-900"
+                leftIcon={<ArrowLeft className="w-4 h-4" />}
+                onClick={() => navigate('/dashboard')}
+            >
+                Powrót do panelu
+            </Button>
+
             <h1 className="text-3xl font-bold text-center text-slate-900 mb-12">Kreator kursu</h1>
 
             <div className="bg-white rounded-lg border border-slate-200 p-8 shadow-sm">

@@ -1,3 +1,88 @@
-from django.shortcuts import render
+from common.permissions import IsInstructor
+from rest_framework import viewsets, permissions, filters
+from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from django_filters.rest_framework import DjangoFilterBackend
+from .models import Question, MultipleChoiceOption
+from quiz.serializers import FullQuestionSerializer
+from questionbank.models import QuestionBank
 
-# Create your views here.
+class QuestionPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+class QuestionViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for viewing and editing questions.
+    Supports filtering by tags and search text.
+    """
+    queryset = Question.objects.all()
+    serializer_class = FullQuestionSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated, IsInstructor]
+    pagination_class = QuestionPagination
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    search_fields = ['text', 'tags']
+    filterset_fields = {
+        'tags': ['icontains'],
+        'question_bank': ['exact', 'isnull'],
+        'is_open_ended': ['exact'],
+    }
+
+    def get_queryset(self):
+        # Optionally filter by user permissions if needed.
+        # For now, allow viewing all questions (as they are reusable).
+        return Question.objects.all()
+
+    def perform_create(self, serializer):
+        # Handle polymorphic creation if needed or just standard save
+        # serializer.save() works for Question fields.
+        # But we need to handle MultipleChoiceOption creation if type is 'closed'
+        # The serializer from quiz.serializers is read-only for options (SerializerMethodField).
+        # We need a writeable serializer or handle it here.
+        
+        data = self.request.data
+        q_type = data.get('type', 'open') # 'open' or 'closed' (or 'multiple_choice')
+        
+        # If we use QuestionSerializer, it might not validate 'options' because it's ReadOnly.
+        # So we might need to manually extract them.
+        
+        text = data.get('text')
+        tags = data.get('tags', '')
+        bank_id = data.get('question_bank')
+        
+        bank = None
+        if bank_id:
+            try:
+                bank = QuestionBank.objects.get(id=bank_id)
+            except QuestionBank.DoesNotExist:
+                pass
+        
+        if q_type == 'closed' or q_type == 'multiple_choice':
+            options = data.get('options', [])
+            correct_idx = int(data.get('correctOption', 0)) # Assuming 0-based from frontend
+            
+             # Ensure 4 options
+            opts = (options + [""] * 4)[:4]
+            
+            MultipleChoiceOption.objects.create(
+                text=text,
+                question_bank=bank,
+                tags=tags,
+                is_open_ended=False,
+                option1=opts[0],
+                option2=opts[1],
+                option3=opts[2],
+                option4=opts[3],
+                correct_option=correct_idx + 1 # Model usage likely 1-indexed? checking.. yes in questionbank/views.py it used +1
+            )
+        else:
+             Question.objects.create(
+                text=text,
+                question_bank=bank,
+                tags=tags,
+                is_open_ended=True
+            )
+

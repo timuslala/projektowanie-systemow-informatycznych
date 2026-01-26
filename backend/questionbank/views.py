@@ -1,13 +1,14 @@
-from rest_framework import serializers
+from rest_framework import serializers, status
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer, SerializerMethodField
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from common.permissions import IsInstructor
 from question.models import MultipleChoiceOption, Question
-
-
+from quiz.serializers import QuestionSerializer
 
 from .models import QuestionBank
 
@@ -25,20 +26,8 @@ class QuestionBankSerializer(ModelSerializer):
         return obj.question_set.count()
 
     def get_questions(self, obj):
-        # We don't necessarily need to return full questions here for the list view,
-        # but if we did, we'd need a QuestionSerializer.
-        # For now, let's just make it write_only effectively by not returning much or handling it
-        # Actually, let's make it write_only in the field definition by using `initial` or custom handling
-        # But simpler: explicit field definition
         return []
 
-    def to_internal_value(self, data):
-        # Allow 'questions' to pass through to validated_data even if not in fields/model directly (as write_only)
-        # But better to try standard DRF way first.
-        # Let's override the class field definition instead of MethodField for input.
-        return super().to_internal_value(data)
-
-    # Redefine to accept input
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["questions"] = serializers.ListField(
@@ -60,11 +49,7 @@ class QuestionBankSerializer(ModelSerializer):
             elif q_type == "closed":
                 options = q_data.get("options", [])
                 correct_option_idx = q_data.get("correctOption", 0)  # 0-based index
-
-                # Ensure we have 4 options or handle it gracefully.
-                # Model expects option1..4.
-                # Pad if necessary or take first 4.
-                opts = (options + [""] * 4)[:4]
+                opts = (options + ["]"] * 4)[:4]
 
                 MultipleChoiceOption.objects.create(
                     question_bank=question_bank,
@@ -78,6 +63,7 @@ class QuestionBankSerializer(ModelSerializer):
                 )
 
         return question_bank
+
 
 
 class QuestionBankViewSet(ModelViewSet):
@@ -99,3 +85,15 @@ class QuestionBankViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         return serializer.save(user=self.request.user)
+
+    @action(detail=True, methods=["get"])
+    def questions(self, request, pk=None):
+        # We need to handle lookup using the correct kwarg if applicable, 
+        # but standard action mixin usually uses get_object which respects lookup_url_kwarg.
+        # Make sure get_object works. Default lookup_field is 'pk', but custom lookup_url_kwarg is set.
+        # DRF get_object uses simple lookup if not overridden?
+        # Let's trust get_object() works with ModelViewSet defaults + lookup_url_kwarg.
+        bank = self.get_object()
+        questions = bank.question_set.all()
+        serializer = QuestionSerializer(questions, many=True)
+        return Response(serializer.data)

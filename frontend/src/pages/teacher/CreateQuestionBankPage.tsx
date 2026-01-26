@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
@@ -6,28 +6,58 @@ import { Plus } from 'lucide-react';
 import api from '../../services/api';
 
 interface Question {
-    id: string; // Using string for temp/mock IDs
+    id: string | number;
     text: string;
     type: 'closed' | 'open';
     options?: string[];
     correctOption?: number;
+    tags?: string; // Comma separated
 }
 
 export const CreateQuestionBankPage = () => {
     const navigate = useNavigate();
     const [bankName, setBankName] = useState('');
-    const [availableQuestions, setAvailableQuestions] = useState<Question[]>([
-        { id: '1', text: 'Pytanie dla quizu z losowej dziedziny', type: 'open' },
-        { id: '2', text: 'Kolejne pytanie dla quizu wybranego przez użytkownika', type: 'closed' },
-        { id: '3', text: 'Pytanie dla innego kursu', type: 'open' },
-        { id: '4', text: 'Pytanie z całkiem innej dziedziny', type: 'closed' },
-    ]);
+    const [availableQuestions, setAvailableQuestions] = useState<Question[]>([]);
     const [bankQuestions, setBankQuestions] = useState<Question[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [tagsFilter, setTagsFilter] = useState('');
+
+    useEffect(() => {
+        fetchAvailableQuestions();
+    }, [tagsFilter]);
+
+    const fetchAvailableQuestions = async () => {
+        try {
+            // Fetch questions with tag filtering
+            const params: any = {};
+            if (tagsFilter) params.tags = tagsFilter;
+
+            const response = await api.get('/api/questions/', { params });
+            const APIData = response.data.results || response.data; // Handle pagination or list
+
+            // Map Backend to Frontend Model
+            const mappedQuestions: Question[] = APIData.map((q: any) => ({
+                id: q.id,
+                text: q.text,
+                type: q.type === 'multiple_choice' ? 'closed' : 'open',
+                options: q.options ? q.options.map((o: any) => o.text) : [],
+                correctOption: q.correct_option ? q.correct_option - 1 : undefined, // Backend is 1-based
+                tags: q.tags
+            }));
+
+            // Filter out questions already in the bank
+            const bankIds = new Set(bankQuestions.map(bq => String(bq.id)));
+            setAvailableQuestions(mappedQuestions.filter(q => !bankIds.has(String(q.id))));
+
+        } catch (error) {
+            console.error("Failed to fetch questions", error);
+        }
+    };
 
     // New Question Form State
     const [newQuestionText, setNewQuestionText] = useState('');
+    const [newQuestionTags, setNewQuestionTags] = useState('');
     const [isOpenEnded, setIsOpenEnded] = useState(false);
     const [options, setOptions] = useState(['', '', '', '']);
     const [correctOptionIndex, setCorrectOptionIndex] = useState(0);
@@ -36,14 +66,24 @@ export const CreateQuestionBankPage = () => {
         setLoading(true);
         try {
             // 1. Create Bank
-            const response = await api.post('/api/question_banks/', { title: bankName, questions: bankQuestions });
+            // Note: The backend expects nested question objects to CREATE them.
+            // If we want to link existing questions, we might need to adjust the backend or 
+            // accept that we are creating COPIES of the selected questions in the new bank.
+            // For now, we send the question data as is, which will create copies linked to this bank.
+            // This preserves the "Template" behavior.
+
+            const payloadQuestions = bankQuestions.map(q => ({
+                text: q.text,
+                type: q.type === 'closed' ? 'closed' : 'open',
+                options: q.options, // string[]
+                correctOption: q.correctOption !== undefined ? q.correctOption : 0,
+                tags: q.tags
+            }));
+
+            const response = await api.post('/api/question_banks/', { title: bankName, questions: payloadQuestions });
             const bankId = response.data.id;
 
-            // 2. Add Questions (Mocking loop for now as we might need bulk create or loop)
-            // Real implementation would depend on backend endpoints for adding questions to bank
-            // For now, we assume success or implement simple loop if endpoints exist
-            console.log("Bank created:", bankId, "Questions:", bankQuestions);
-
+            console.log("Bank created:", bankId);
             navigate('/dashboard');
         } catch (error) {
             console.error("Failed to create bank", error);
@@ -62,22 +102,43 @@ export const CreateQuestionBankPage = () => {
         setBankQuestions(bankQuestions.filter(q => q.id !== question.id));
     };
 
-    const handleCreateNewQuestion = () => {
-        const newQuestion: Question = {
-            id: Math.random().toString(36).substr(2, 9),
-            text: newQuestionText,
-            type: isOpenEnded ? 'open' : 'closed',
-            options: isOpenEnded ? undefined : options,
-            correctOption: isOpenEnded ? undefined : correctOptionIndex
-        };
-        // Add directly to bank as per "Utwórz pytanie" in bank creator context
-        setBankQuestions([...bankQuestions, newQuestion]);
-        closeModal();
+    const handleCreateNewQuestion = async () => {
+        try {
+            const payload = {
+                text: newQuestionText,
+                type: isOpenEnded ? 'open' : 'closed', // 'open' maps to is_open_ended=True in backend view
+                options: isOpenEnded ? [] : options,
+                correctOption: isOpenEnded ? 0 : correctOptionIndex,
+                tags: newQuestionTags
+            };
+
+            // Create question via API immediately
+            const response = await api.post('/api/questions/', payload);
+            const qData = response.data;
+
+            const newQuestion: Question = {
+                id: qData.id,
+                text: qData.text,
+                type: qData.type === 'multiple_choice' ? 'closed' : 'open',
+                options: qData.options ? qData.options.map((o: any) => o.text) : [],
+                correctOption: qData.correct_option ? qData.correct_option - 1 : undefined,
+                tags: qData.tags
+            };
+
+            // Add to bank list (which means it will be copied into the bank upon save, 
+            // or we could consider it "claimed" if we updated the logic, but copy is fine)
+            setBankQuestions([...bankQuestions, newQuestion]);
+            closeModal();
+        } catch (error) {
+            console.error("Failed to create question", error);
+            // Optionally show error to user
+        }
     };
 
     const closeModal = () => {
         setIsModalOpen(false);
         setNewQuestionText('');
+        setNewQuestionTags('');
         setIsOpenEnded(false);
         setOptions(['', '', '', '']);
         setCorrectOptionIndex(0);
@@ -91,7 +152,16 @@ export const CreateQuestionBankPage = () => {
                 {/* LEFT: Available Questions */}
                 <Card className="h-full border border-slate-200">
                     <h2 className="text-lg font-bold text-slate-900 mb-6">Dostępne pytania</h2>
-                    <div className="space-y-4">
+
+                    {/* Tag Filter */}
+                    <input
+                        className="w-full px-4 py-2 border border-slate-200 rounded-md outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 mb-4"
+                        placeholder="Filtruj po tagach (np. word, english)..."
+                        value={tagsFilter}
+                        onChange={(e) => setTagsFilter(e.target.value)}
+                    />
+
+                    <div className="space-y-4 max-h-[500px] overflow-y-auto">
                         {availableQuestions.map(q => (
                             <div key={q.id} className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-lg hover:border-blue-300 transition-colors">
                                 <span className="text-slate-700">{q.text}</span>
@@ -182,6 +252,13 @@ export const CreateQuestionBankPage = () => {
                                     placeholder="Wprowadź treść pytania"
                                     value={newQuestionText}
                                     onChange={(e) => setNewQuestionText(e.target.value)}
+                                />
+
+                                <input
+                                    className="w-full px-4 py-3 border border-slate-200 rounded-md outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                    placeholder="Tagi (oddzielone przecinkiem)"
+                                    value={newQuestionTags}
+                                    onChange={(e) => setNewQuestionTags(e.target.value)}
                                 />
 
                                 <label className="flex items-center gap-2 cursor-pointer w-fit">

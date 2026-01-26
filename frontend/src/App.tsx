@@ -28,6 +28,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <MainLayout>{children}</MainLayout>;
 };
 
+import { QuizDetailsPage } from './pages/teacher/QuizDetailsPage';
+
 function App() {
   return (
     <AuthProvider>
@@ -46,14 +48,7 @@ function App() {
             }
           />
 
-          <Route
-            path="/courses/create"
-            element={
-              <ProtectedRoute>
-                <CreateCoursePage />
-              </ProtectedRoute>
-            }
-          />
+
 
           <Route
             path="/courses/create"
@@ -105,6 +100,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <QuizzesPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/quizzes/:id"
+            element={
+              <ProtectedRoute>
+                <QuizDetailsPage />
               </ProtectedRoute>
             }
           />

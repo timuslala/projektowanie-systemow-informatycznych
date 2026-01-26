@@ -5,9 +5,10 @@ from django.db import models
 class Question(models.Model):
     text = models.TextField()
     question_bank = models.ForeignKey(
-        "questionbank.QuestionBank", on_delete=models.CASCADE
+        "questionbank.QuestionBank", on_delete=models.CASCADE, null=True, blank=True
     )
     is_open_ended = models.BooleanField(default=False)
+    tags = models.TextField(blank=True, help_text="Comma-separated tags")
 
 
 class MultipleChoiceOption(Question):
