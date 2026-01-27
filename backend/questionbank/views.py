@@ -8,7 +8,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from common.permissions import IsInstructor
 from question.models import MultipleChoiceOption, Question
-from quiz.serializers import QuestionSerializer
+from quiz.serializers import QuestionSerializer, FullQuestionSerializer
 
 from .models import QuestionBank
 
@@ -91,5 +91,5 @@ class QuestionBankViewSet(ModelViewSet):
     def questions(self, request, question_bank_id=None):
         bank = self.get_object()
         questions = bank.questions.all()
-        serializer = QuestionSerializer(questions, many=True)
+        serializer = FullQuestionSerializer(questions, many=True)
         return Response(serializer.data)

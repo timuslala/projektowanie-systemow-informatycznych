@@ -17,6 +17,7 @@ interface Question {
     type: 'multiple_choice' | 'open_ended';
     is_open_ended: boolean;
     options?: QuestionOption[];
+    correct_option?: number; // 1-based index from backend
 }
 
 interface Quiz {
@@ -305,14 +306,29 @@ export const QuizDetailsPage = () => {
 
                                                 {q.type === 'multiple_choice' && q.options && (
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-                                                        {q.options.map((opt, optIdx) => (
-                                                            <div key={optIdx} className="flex items-center gap-3 p-3 rounded border border-slate-200 bg-slate-50/50">
-                                                                <div className="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center text-xs text-slate-400">
-                                                                    {String.fromCharCode(65 + optIdx)}
+                                                        {q.options.map((opt, optIdx) => {
+                                                            const isCorrect = q.correct_option === optIdx + 1;
+                                                            return (
+                                                                <div
+                                                                    key={optIdx}
+                                                                    className={`flex items-center gap-3 p-3 rounded border transition-colors ${isCorrect
+                                                                            ? 'border-emerald-300 bg-emerald-50'
+                                                                            : 'border-slate-200 bg-slate-50/50'
+                                                                        }`}
+                                                                >
+                                                                    <div className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs ${isCorrect
+                                                                            ? 'border-emerald-500 text-emerald-600 font-bold bg-white'
+                                                                            : 'border-slate-300 text-slate-400'
+                                                                        }`}>
+                                                                        {String.fromCharCode(65 + optIdx)}
+                                                                    </div>
+                                                                    <span className={isCorrect ? 'text-emerald-900 font-medium' : 'text-slate-700'}>
+                                                                        {opt.text}
+                                                                        {isCorrect && <span className="ml-2 text-xs text-emerald-600 font-normal">(Poprawna)</span>}
+                                                                    </span>
                                                                 </div>
-                                                                <span className="text-slate-700">{opt.text}</span>
-                                                            </div>
-                                                        ))}
+                                                            );
+                                                        })}
                                                     </div>
                                                 )}
 

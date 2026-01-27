@@ -117,7 +117,7 @@ export const QuestionBankDetailsPage = () => {
     if (!bank) return <div className="text-center mt-10 text-slate-500">Bank pytań nie został znaleziony</div>;
 
     return (
-        <div className="max-w-[1400px] mx-auto py-8 px-4 animate-fade-in space-y-6">
+        <div className="max-w-[1400px] min-h-screen mx-auto py-8 px-4 animate-fade-in space-y-6">
             <div className="flex items-center gap-4">
                 <Button variant="ghost" onClick={() => navigate('/question-banks')} leftIcon={<ArrowLeft className="w-4 h-4" />}>
                     Powrót
