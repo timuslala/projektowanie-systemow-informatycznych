@@ -364,7 +364,7 @@ export const CourseManagePage = () => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                     {/* Modules Section */}
-                    <div className="space-y-6">
+                    <div className="space-y-6 flex flex-col h-[50vh]">
                         <div className="flex justify-between items-center">
                             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                                 <BookOpen className="w-5 h-5 text-indigo-600" />
@@ -375,7 +375,7 @@ export const CourseManagePage = () => {
                             </Button>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-4 overflow-y-auto flex-1 pr-2">
                             {modules.length === 0 ? (
                                 <div className="p-8 border border-dashed border-slate-200 rounded-lg text-center text-slate-500 bg-white">
                                     Brak modułów. Dodaj jeden, aby rozpocząć.
@@ -404,18 +404,18 @@ export const CourseManagePage = () => {
                     </div>
 
                     {/* Quizzes Section */}
-                    <div className="space-y-6">
+                    <div className="space-y-6 flex flex-col h-[50vh]">
                         <div className="flex justify-between items-center">
                             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                                 <Clock className="w-5 h-5 text-emerald-600" />
-                                Quizy i Testy
+                                Quizy
                             </h2>
                             <Button onClick={() => setIsQuizModalOpen(true)} size="sm" leftIcon={<Plus className="w-4 h-4" />}>
                                 Dodaj quiz
                             </Button>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-4 overflow-y-auto flex-1 pr-2">
                             {quizzes.length === 0 ? (
                                 <div className="p-8 border border-dashed border-slate-200 rounded-lg text-center text-slate-500 bg-white">
                                     Brak quizów. Dodaj jeden, aby rozpocząć.
@@ -449,7 +449,7 @@ export const CourseManagePage = () => {
                 </div>
 
                 {/* Enrolled Students Section */}
-                <div className="space-y-6">
+                <div className="space-y-6 flex flex-col h-[50vh]">
                     <div className="flex justify-between items-center">
                         <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                             <Users className="w-5 h-5 text-blue-600" />
@@ -460,7 +460,7 @@ export const CourseManagePage = () => {
                         </Button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto flex-1 pr-2 pb-2 content-start">
                         {enrolledStudents.length === 0 ? (
                             <div className="col-span-full p-8 border border-dashed border-slate-200 rounded-lg text-center text-slate-500 bg-white">
                                 Brak zapisanych uczniów.

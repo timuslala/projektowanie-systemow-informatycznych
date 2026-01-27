@@ -13,6 +13,7 @@ import { CreateQuestionBankPage } from './pages/teacher/CreateQuestionBankPage';
 import { CourseDetailsPage } from './pages/student/CourseDetailsPage';
 import { QuizReviewPage } from './pages/student/QuizReviewPage';
 import { QuestionBanksPage } from './pages/teacher/QuestionBanksPage';
+import { QuestionBankDetailsPage } from './pages/teacher/QuestionBankDetailsPage';
 import { QuizzesPage } from './pages/teacher/QuizzesPage';
 import { CourseManagePage } from './pages/teacher/CourseManagePage';
 
@@ -91,6 +92,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <QuestionBanksPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/question-banks/:id"
+            element={
+              <ProtectedRoute>
+                <QuestionBankDetailsPage />
               </ProtectedRoute>
             }
           />

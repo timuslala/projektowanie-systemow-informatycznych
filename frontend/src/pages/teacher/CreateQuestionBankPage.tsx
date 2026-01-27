@@ -49,7 +49,6 @@ export const CreateQuestionBankPage = () => {
             // Filter out questions already in the bank
             const bankIds = new Set(bankQuestions.map(bq => String(bq.id)));
             setAvailableQuestions(mappedQuestions.filter(q => !bankIds.has(String(q.id))));
-
         } catch (error) {
             console.error("Failed to fetch questions", error);
         }
@@ -168,14 +167,14 @@ export const CreateQuestionBankPage = () => {
                                 <div className="flex gap-2">
                                     <Button
                                         size="sm"
-                                        className="bg-red-600 hover:bg-red-700 w-8 h-8 p-0 flex items-center justify-center rounded-md"
+                                        className="bg-red-600 hover:bg-red-700 w-full px-3"
                                     >
-                                        -
+                                        Usuń
                                     </Button>
                                     <Button
                                         size="sm"
                                         onClick={() => handleAddQuestionToBank(q)}
-                                        className="bg-blue-100 hover:bg-blue-200 text-blue-700 w-full px-3"
+                                        className="hover:bg-blue-200 text-blue-700 w-full px-3"
                                     >
                                         Dodaj
                                     </Button>

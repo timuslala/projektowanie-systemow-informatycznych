@@ -23,7 +23,7 @@ class QuestionBankSerializer(ModelSerializer):
         read_only_fields = ["id", "number_of_questions"]
 
     def get_number_of_questions(self, obj):
-        return obj.question_set.count()
+        return obj.questions.count()
 
     def get_questions(self, obj):
         return []
@@ -43,16 +43,16 @@ class QuestionBankSerializer(ModelSerializer):
             text = q_data.get("text")
 
             if q_type == "open":
-                Question.objects.create(
-                    question_bank=question_bank, text=text, is_open_ended=True
+                q = Question.objects.create(
+                    text=text, is_open_ended=True
                 )
+                question_bank.questions.add(q)
             elif q_type == "closed":
                 options = q_data.get("options", [])
                 correct_option_idx = q_data.get("correctOption", 0)  # 0-based index
                 opts = (options + ["]"] * 4)[:4]
 
-                MultipleChoiceOption.objects.create(
-                    question_bank=question_bank,
+                mco = MultipleChoiceOption.objects.create(
                     text=text,
                     is_open_ended=False,
                     option1=opts[0],
@@ -61,6 +61,7 @@ class QuestionBankSerializer(ModelSerializer):
                     option4=opts[3],
                     correct_option=correct_option_idx + 1,  # Model uses 1-based
                 )
+                question_bank.questions.add(mco)
 
         return question_bank
 
@@ -87,13 +88,8 @@ class QuestionBankViewSet(ModelViewSet):
         return serializer.save(user=self.request.user)
 
     @action(detail=True, methods=["get"])
-    def questions(self, request, pk=None):
-        # We need to handle lookup using the correct kwarg if applicable, 
-        # but standard action mixin usually uses get_object which respects lookup_url_kwarg.
-        # Make sure get_object works. Default lookup_field is 'pk', but custom lookup_url_kwarg is set.
-        # DRF get_object uses simple lookup if not overridden?
-        # Let's trust get_object() works with ModelViewSet defaults + lookup_url_kwarg.
+    def questions(self, request, question_bank_id=None):
         bank = self.get_object()
-        questions = bank.question_set.all()
+        questions = bank.questions.all()
         serializer = QuestionSerializer(questions, many=True)
         return Response(serializer.data)

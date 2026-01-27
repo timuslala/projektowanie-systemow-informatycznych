@@ -2,12 +2,12 @@
 
 :root {
   /* Colors - Light & Clean Palette */
-  --color-primary: #2563eb;
-  /* Blue 600 */
-  --color-primary-hover: #1d4ed8;
-  /* Blue 700 */
-  --color-primary-light: #dbeafe;
-  /* Blue 100 */
+  --color-primary: #3758F9;
+  /* Royal Blue */
+  --color-primary-hover: #2547d0;
+  /* Darker Royal Blue */
+  --color-primary-light: #eef2ff;
+  /* Indigo 50 */
 
   --color-background: #ffffff;
   /* White */
@@ -89,8 +89,6 @@ a {
 
 button {
   cursor: pointer;
-  border: none;
-  background: none;
   font-family: inherit;
 }
 

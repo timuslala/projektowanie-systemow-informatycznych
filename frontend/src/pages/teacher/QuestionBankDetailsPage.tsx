@@ -1,0 +1,263 @@
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Plus, Trash2, X } from 'lucide-react';
+import api from '../../services/api';
+import { Button } from '../../components/Button';
+import { Card } from '../../components/Card';
+
+interface Question {
+    id: number;
+    text: string;
+    type: 'open' | 'closed';
+    options?: string[]; // simplified for display
+    correctOption?: number;
+    question_bank: number;
+}
+
+interface QuestionBank {
+    id: number;
+    title: string;
+}
+
+export const QuestionBankDetailsPage = () => {
+    const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
+    const [bank, setBank] = useState<QuestionBank | null>(null);
+    const [questions, setQuestions] = useState<Question[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // Modal State
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [newQuestionText, setNewQuestionText] = useState('');
+    const [newQuestionType, setNewQuestionType] = useState<'open' | 'closed'>('open');
+    // For closed questions
+    const [option1, setOption1] = useState('');
+    const [option2, setOption2] = useState('');
+    const [option3, setOption3] = useState('');
+    const [option4, setOption4] = useState('');
+    const [correctOption, setCorrectOption] = useState(0); // 0-3 index
+
+    useEffect(() => {
+        const fetchData = async () => {
+            if (!id) return;
+            try {
+                const [bankRes, questionsRes] = await Promise.all([
+                    api.get(`/api/question_banks/${id}/`),
+                    api.get(`/api/question_banks/${id}/questions/`)
+                ]);
+                setBank(bankRes.data);
+                setQuestions(questionsRes.data);
+            } catch (error) {
+                console.error("Failed to fetch data", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, [id]);
+
+    const handleAddQuestion = async () => {
+        if (!id) return;
+        try {
+            const payload: any = {
+                text: newQuestionText,
+                type: newQuestionType,
+                question_bank: parseInt(id)
+            };
+
+            if (newQuestionType === 'closed') {
+                payload.options = [option1, option2, option3, option4];
+                payload.correctOption = correctOption; // Backend expects 0-based in some views, let's verify. 
+                // Previous analysis of views.py showed it takes correctOption (0-based) and adds 1 for model.
+                // So sending 0-based index is correct.
+            }
+
+            // We use the QuestionViewSet which is mapped to /api/questions/ usually, 
+            // but we need to check if we should post to keys
+            // The plan said POST to /api/questions/ with question_bank ID.
+
+            await api.post('/api/questions/', payload);
+
+            // Refresh questions or append
+            // The response might be the created question.
+            // Let's refetch to be safe or append if structure matches
+            const questionsRes = await api.get(`/api/question_banks/${id}/questions/`);
+            setQuestions(questionsRes.data);
+
+            closeModal();
+        } catch (error) {
+            console.error("Failed to create question", error);
+            alert("Failed to create question");
+        }
+    };
+
+    const handleDeleteQuestion = async (questionId: number) => {
+        if (!confirm("Are you sure you want to delete this question?")) return;
+        try {
+            await api.delete(`/api/questions/${questionId}/`);
+            setQuestions(questions.filter(q => q.id !== questionId));
+        } catch (error) {
+            console.error("Failed to delete question", error);
+            alert("Failed to delete question");
+        }
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setNewQuestionText('');
+        setNewQuestionType('open');
+        setOption1('');
+        setOption2('');
+        setOption3('');
+        setOption4('');
+        setCorrectOption(0);
+    };
+
+    if (loading) return <div className="text-center mt-10 text-slate-500">Loading Question Bank...</div>;
+    if (!bank) return <div className="text-center mt-10 text-slate-500">Question Bank not found</div>;
+
+    return (
+        <div className="max-w-[1400px] mx-auto py-8 px-4 animate-fade-in space-y-6">
+            <div className="flex items-center gap-4">
+                <Button variant="ghost" onClick={() => navigate('/question-banks')} leftIcon={<ArrowLeft className="w-4 h-4" />}>
+                    Back
+                </Button>
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-900">{bank.title}</h1>
+                    <p className="text-slate-500">Manage questions in this bank</p>
+                </div>
+            </div>
+
+            <div className="flex justify-end">
+                <Button onClick={() => setIsModalOpen(true)} leftIcon={<Plus className="w-4 h-4" />}>
+                    Add Question
+                </Button>
+            </div>
+
+            <div className="space-y-4">
+                {questions.length === 0 ? (
+                    <div className="p-12 border border-dashed border-slate-200 rounded-lg text-center text-slate-500 bg-white">
+                        No questions in this bank yet. Add one to get started.
+                    </div>
+                ) : (
+                    questions.map((q, idx) => (
+                        <Card key={q.id || idx} className="group hover:border-indigo-300 transition-all">
+                            <div className="flex justify-between items-start gap-4">
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className={`text-xs px-2 py-0.5 rounded-full ${q.type === 'open' ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                                            {q.type === 'open' ? 'Open Ended' : 'Multiple Choice'}
+                                        </span>
+                                    </div>
+                                    <h3 className="text-lg font-medium text-slate-900">{q.text}</h3>
+                                    {/* Show options if closed? The listing endpoint might not return full details depending on serializer. 
+                                        Assuming it does or we just show text. */}
+                                </div>
+                                <Button
+                                    variant="danger" // Using danger variant which should be Red
+                                    size="sm"
+                                    onClick={() => handleDeleteQuestion(q.id)}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </Card>
+                    ))
+                )}
+            </div>
+
+            {/* Modal */}
+            {isModalOpen && (
+                <div className="fixed inset-0 z-50 overflow-y-auto">
+                    <div className="flex min-h-full items-center justify-center p-4">
+                        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={closeModal} />
+                        <div className="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white border border-slate-200 p-6 shadow-xl transition-all">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-xl font-bold text-slate-900">Add New Question</h2>
+                                <button onClick={closeModal} className="text-slate-400 hover:text-slate-600">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Question Text</label>
+                                    <textarea
+                                        className="w-full px-4 py-2 bg-white border border-slate-300 rounded-md text-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none h-24"
+                                        value={newQuestionText}
+                                        onChange={(e) => setNewQuestionText(e.target.value)}
+                                        placeholder="Enter question content..."
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Type</label>
+                                    <div className="flex gap-4">
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="type"
+                                                value="open"
+                                                checked={newQuestionType === 'open'}
+                                                onChange={() => setNewQuestionType('open')}
+                                                className="text-indigo-600 focus:ring-indigo-500"
+                                            />
+                                            <span className="text-slate-700">Open Ended</span>
+                                        </label>
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="type"
+                                                value="closed"
+                                                checked={newQuestionType === 'closed'}
+                                                onChange={() => setNewQuestionType('closed')}
+                                                className="text-indigo-600 focus:ring-indigo-500"
+                                            />
+                                            <span className="text-slate-700">Multiple Choice</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {newQuestionType === 'closed' && (
+                                    <div className="space-y-3 bg-slate-50 p-4 rounded-lg">
+                                        <p className="text-sm font-medium text-slate-700">Options</p>
+                                        <div className="grid gap-3">
+                                            {[option1, option2, option3, option4].map((_, idx) => (
+                                                <div key={idx} className="flex items-center gap-3">
+                                                    <input
+                                                        type="radio"
+                                                        name="correctOption"
+                                                        checked={correctOption === idx}
+                                                        onChange={() => setCorrectOption(idx)}
+                                                    />
+                                                    <input
+                                                        className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-md text-slate-900 focus:border-indigo-500 outline-none text-sm"
+                                                        placeholder={`Option ${idx + 1}`}
+                                                        value={idx === 0 ? option1 : idx === 1 ? option2 : idx === 2 ? option3 : option4}
+                                                        onChange={(e) => {
+                                                            if (idx === 0) setOption1(e.target.value);
+                                                            if (idx === 1) setOption2(e.target.value);
+                                                            if (idx === 2) setOption3(e.target.value);
+                                                            if (idx === 3) setOption4(e.target.value);
+                                                        }}
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <p className="text-xs text-slate-500">Select the radio button next to the correct answer.</p>
+                                    </div>
+                                )}
+
+                                <div className="flex justify-end gap-3 pt-4">
+                                    <Button variant="ghost" onClick={closeModal}>Cancel</Button>
+                                    <Button onClick={handleAddQuestion} disabled={!newQuestionText}>Save Question</Button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};

@@ -3,7 +3,7 @@ from rest_framework import viewsets, permissions, filters
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import DjangoFilterBackend, FilterSet, CharFilter
 from .models import Question, MultipleChoiceOption
 from quiz.serializers import FullQuestionSerializer
 from questionbank.models import QuestionBank
@@ -12,6 +12,13 @@ class QuestionPagination(PageNumberPagination):
     page_size = 20
     page_size_query_param = 'page_size'
     max_page_size = 100
+
+class QuestionFilter(FilterSet):
+    tags = CharFilter(lookup_expr='icontains')
+
+    class Meta:
+        model = Question
+        fields = ['question_banks', 'is_open_ended']
 
 class QuestionViewSet(viewsets.ModelViewSet):
     """
@@ -25,11 +32,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
     pagination_class = QuestionPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     search_fields = ['text', 'tags']
-    filterset_fields = {
-        'tags': ['icontains'],
-        'question_bank': ['exact', 'isnull'],
-        'is_open_ended': ['exact'],
-    }
+    filterset_class = QuestionFilter
 
     def get_queryset(self):
         # Optionally filter by user permissions if needed.
@@ -67,9 +70,8 @@ class QuestionViewSet(viewsets.ModelViewSet):
              # Ensure 4 options
             opts = (options + [""] * 4)[:4]
             
-            MultipleChoiceOption.objects.create(
+            mco = MultipleChoiceOption.objects.create(
                 text=text,
-                question_bank=bank,
                 tags=tags,
                 is_open_ended=False,
                 option1=opts[0],
@@ -78,11 +80,14 @@ class QuestionViewSet(viewsets.ModelViewSet):
                 option4=opts[3],
                 correct_option=correct_idx + 1 # Model usage likely 1-indexed? checking.. yes in questionbank/views.py it used +1
             )
+            if bank:
+                bank.questions.add(mco)
         else:
-             Question.objects.create(
+             q = Question.objects.create(
                 text=text,
-                question_bank=bank,
                 tags=tags,
                 is_open_ended=True
             )
+             if bank:
+                 bank.questions.add(q)
 
