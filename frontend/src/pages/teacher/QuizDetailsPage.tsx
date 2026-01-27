@@ -231,10 +231,10 @@ export const QuizDetailsPage = () => {
                 variant="ghost"
                 size="sm"
                 leftIcon={<ArrowLeft className="w-4 h-4" />}
-                onClick={() => navigate('/quizzes')}
+                onClick={() => navigate('/dashboard')}
                 className="text-slate-500 hover:text-indigo-600"
             >
-                Powrót do quizów
+                Powrót do panelu
             </Button>
 
             <div className="flex flex-col md:flex-row justify-between md:items-start gap-6">
@@ -312,13 +312,13 @@ export const QuizDetailsPage = () => {
                                                                 <div
                                                                     key={optIdx}
                                                                     className={`flex items-center gap-3 p-3 rounded border transition-colors ${isCorrect
-                                                                            ? 'border-emerald-300 bg-emerald-50'
-                                                                            : 'border-slate-200 bg-slate-50/50'
+                                                                        ? 'border-emerald-300 bg-emerald-50'
+                                                                        : 'border-slate-200 bg-slate-50/50'
                                                                         }`}
                                                                 >
                                                                     <div className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs ${isCorrect
-                                                                            ? 'border-emerald-500 text-emerald-600 font-bold bg-white'
-                                                                            : 'border-slate-300 text-slate-400'
+                                                                        ? 'border-emerald-500 text-emerald-600 font-bold bg-white'
+                                                                        : 'border-slate-300 text-slate-400'
                                                                         }`}>
                                                                         {String.fromCharCode(65 + optIdx)}
                                                                     </div>

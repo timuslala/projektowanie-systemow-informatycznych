@@ -29,6 +29,7 @@ services:
       DB_PORT: 5432
       PRODUCTION: "False"
       AWS_S3_ENDPOINT_URL: http://localstack:4566
+      AWS_S3_PUBLIC_URL: http://localhost:4566
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
       AWS_REGION: us-east-1

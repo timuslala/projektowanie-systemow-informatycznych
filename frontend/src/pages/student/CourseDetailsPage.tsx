@@ -10,6 +10,7 @@ interface Module {
     id: number;
     name: string;
     content: string;
+    photo_url?: string;
 }
 
 interface Quiz {
@@ -78,16 +79,26 @@ export const CourseDetailsPage = () => {
                             return (
                                 <div key={module.id} className="space-y-4">
                                     <Card className="border-l-4 border-l-indigo-500">
-                                        <div className="flex items-center gap-4">
-                                            <div className="p-3 rounded-lg bg-indigo-500/20 text-indigo-400">
-                                                <FileText className="w-6 h-6" />
+                                        <div className="flex items-center gap-4 mb-4">
+                                            <div className="flex-shrink-0">
+                                                {module.photo_url ? (
+                                                    <img
+                                                        src={module.photo_url}
+                                                        alt={module.name}
+                                                        className="max-w-[80px] md:max-w-[120px] w-[48px] h-auto rounded-lg border border-slate-200"
+                                                    />
+                                                ) : (
+                                                    <div className="p-3 rounded-lg bg-indigo-500/20 text-indigo-400">
+                                                        <FileText className="w-6 h-6" />
+                                                    </div>
+                                                )}
                                             </div>
                                             <div>
                                                 <h3 className="text-xl font-medium text-slate-900">{module.name}</h3>
                                                 <p className="text-sm text-slate-500">Moduł</p>
                                             </div>
                                         </div>
-                                        <div className="mt-4 text-slate-600 prose prose-sm max-w-none">
+                                        <div className="text-slate-600 prose prose-sm max-w-none">
                                             {module.content}
                                         </div>
                                     </Card>

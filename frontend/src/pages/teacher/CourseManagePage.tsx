@@ -16,6 +16,7 @@ interface Module {
     id: number;
     name: string;
     content: string;
+    photo_url?: string;
 }
 
 interface Quiz {
@@ -60,6 +61,7 @@ export const CourseManagePage = () => {
     const [isModuleModalOpen, setIsModuleModalOpen] = useState(false);
     const [newModuleName, setNewModuleName] = useState('');
     const [newModuleContent, setNewModuleContent] = useState('');
+    const [newModuleImage, setNewModuleImage] = useState<File | null>(null);
 
     // Quiz Form State
     const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
@@ -109,7 +111,24 @@ export const CourseManagePage = () => {
                 name: newModuleName,
                 content: newModuleContent
             });
-            setModules([...modules, response.data]);
+
+            let createdModule = response.data;
+
+            if (newModuleImage) {
+                const formData = new FormData();
+                formData.append('image', newModuleImage);
+                try {
+                    const imageRes = await api.post(`/api/courses/${id}/modules/${createdModule.id}/image/`, formData, {
+                        headers: { 'Content-Type': 'multipart/form-data' }
+                    });
+                    createdModule = { ...createdModule, photo_url: imageRes.data.photo_url };
+                } catch (imageError) {
+                    console.error("Failed to upload image", imageError);
+                    alert("Moduł został utworzony, ale wystąpił błąd podczas przesyłania zdjęcia.");
+                }
+            }
+
+            setModules([...modules, createdModule]);
             closeModuleModal();
         } catch (error) {
             console.error("Failed to create module", error);
@@ -196,6 +215,7 @@ export const CourseManagePage = () => {
         setIsModuleModalOpen(false);
         setNewModuleName('');
         setNewModuleContent('');
+        setNewModuleImage(null);
     };
 
     const closeQuizModal = () => {
@@ -245,6 +265,20 @@ export const CourseManagePage = () => {
                                         onChange={(e) => setNewModuleContent(e.target.value)}
                                         placeholder="Treść"
                                     />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Zdjęcie (opcjonalne)</label>
+                                    <input
+                                        type="file"
+                                        accept=".png,.jpg,.jpeg"
+                                        className="w-full text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                                        onChange={(e) => {
+                                            if (e.target.files && e.target.files[0]) {
+                                                setNewModuleImage(e.target.files[0]);
+                                            }
+                                        }}
+                                    />
+                                    <p className="text-xs text-slate-500 mt-1">Formaty: PNG, JPG, JPEG</p>
                                 </div>
                                 <div className="flex justify-end gap-3 pt-4">
                                     <Button variant="ghost" onClick={closeModuleModal} className="text-slate-600 hover:text-slate-900">Anuluj</Button>
@@ -403,9 +437,18 @@ export const CourseManagePage = () => {
                                 modules.map(module => (
                                     <Card key={module.id} className="group hover:border-indigo-300 transition-all">
                                         <div className="flex justify-between items-start">
-                                            <div>
-                                                <h3 className="text-lg font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">{module.name}</h3>
-                                                <p className="text-slate-500 mt-1 line-clamp-2">{module.content}</p>
+                                            <div className="flex gap-4">
+                                                {module.photo_url && (
+                                                    <img
+                                                        src={module.photo_url}
+                                                        alt={module.name}
+                                                        className="w-24 h-24 object-cover rounded-md border border-slate-200"
+                                                    />
+                                                )}
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">{module.name}</h3>
+                                                    <p className="text-slate-500 mt-1 line-clamp-2">{module.content}</p>
+                                                </div>
                                             </div>
                                             <Button
                                                 variant="ghost"

@@ -71,7 +71,7 @@ class ModuleImageView(APIView):
                 in_=openapi.IN_FORM,
                 type=openapi.TYPE_FILE,
                 required=True,
-                description="Module image file PNG image only (image/png)",
+                description="Module image file (PNG, JPG, JPEG)",
             ),
         ],
         responses={200: "Image uploaded"},
@@ -79,10 +79,13 @@ class ModuleImageView(APIView):
     def post(self, request, course_id, module_id):
         try:
             fileobj = request.FILES["image"]
-            if not fileobj.name.lower().endswith(".png"):
-                return Response({"status": "Only PNG images are allowed"}, status=400)
+            if not fileobj.name.lower().endswith((".png", ".jpg", ".jpeg")):
+                return Response(
+                    {"status": "Only PNG, JPG, JPEG images are allowed"}, status=400
+                )
             module = Module.objects.get(id=module_id, course__id=course_id)
             module.upload_photo(fileobj)
             return Response({"status": "image uploaded", "photo_url": module.photo_url})
-        except Exception:
-            return Response({"status": "error uploading image"}, status=400)
+        except Exception as e:
+            print(f"Error uploading image: {e}")
+            return Response({"status": f"error uploading image: {str(e)}"}, status=400)
