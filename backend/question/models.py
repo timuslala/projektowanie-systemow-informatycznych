@@ -16,3 +16,7 @@ class MultipleChoiceOption(Question):
     correct_option = models.IntegerField(
         choices=[(1, "Option 1"), (2, "Option 2"), (3, "Option 3"), (4, "Option 4")]
     )
+    is_multiple_choice = models.BooleanField(default=False)
+    correct_options = models.JSONField(
+        default=list, blank=True, null=True, help_text="List of correct option indices (1-based) for multiple choice"
+    )

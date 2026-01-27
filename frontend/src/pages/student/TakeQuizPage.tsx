@@ -28,11 +28,17 @@ export const TakeQuizPage = () => {
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
 
+    const [quizDetails, setQuizDetails] = useState<{ show_correct_answers_on_completion: boolean } | null>(null);
+
     useEffect(() => {
         const fetchQuiz = async () => {
             try {
-                const response = await api.get(`/api/quizzes/${id}/questions/`);
-                setQuestions(response.data);
+                const [questionsRes, quizRes] = await Promise.all([
+                    api.get(`/api/quizzes/${id}/questions/`),
+                    api.get(`/api/quizzes/${id}/`)
+                ]);
+                setQuestions(questionsRes.data);
+                setQuizDetails(quizRes.data);
             } catch (error) {
                 console.error("Failed to load quiz", error);
             } finally {
@@ -95,9 +101,16 @@ export const TakeQuizPage = () => {
                         </div>
                         <h2 className="text-2xl font-bold text-slate-900">Quiz Submitted!</h2>
                         <p className="text-slate-500">Your answers have been recorded.</p>
-                        <Button onClick={() => navigate('/dashboard')}>
-                            Return to Dashboard
-                        </Button>
+                        <div className="flex gap-4">
+                            <Button onClick={() => navigate('/dashboard')} variant="secondary">
+                                Return to Dashboard
+                            </Button>
+                            {quizDetails?.show_correct_answers_on_completion && (
+                                <Button onClick={() => navigate(`/quiz/${id}/review`)}>
+                                    Review Answers
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </Card>
             </div>

@@ -30,12 +30,14 @@ export const QuestionBankDetailsPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newQuestionText, setNewQuestionText] = useState('');
     const [newQuestionType, setNewQuestionType] = useState<'open' | 'closed'>('open');
+    const [isMultipleChoice, setIsMultipleChoice] = useState(false);
     // For closed questions
     const [option1, setOption1] = useState('');
     const [option2, setOption2] = useState('');
     const [option3, setOption3] = useState('');
     const [option4, setOption4] = useState('');
     const [correctOption, setCorrectOption] = useState(0); // 0-3 index
+    const [correctOptionIndices, setCorrectOptionIndices] = useState<number[]>([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -62,12 +64,18 @@ export const QuestionBankDetailsPage = () => {
             const payload: any = {
                 text: newQuestionText,
                 type: newQuestionType,
-                question_bank: parseInt(id)
+                question_bank: parseInt(id),
+                isMultipleChoice: newQuestionType === 'closed' ? isMultipleChoice : false
             };
 
             if (newQuestionType === 'closed') {
                 payload.options = [option1, option2, option3, option4];
-                payload.correctOption = correctOption; // Backend expects 0-based in some views, let's verify. 
+                if (isMultipleChoice) {
+                    payload.correctOptions = correctOptionIndices;
+                    payload.correctOption = 0; // Fallback
+                } else {
+                    payload.correctOption = correctOption; // Backend expects 0-based in some views, let's verify. 
+                }
                 // Previous analysis of views.py showed it takes correctOption (0-based) and adds 1 for model.
                 // So sending 0-based index is correct.
             }
@@ -106,11 +114,13 @@ export const QuestionBankDetailsPage = () => {
         setIsModalOpen(false);
         setNewQuestionText('');
         setNewQuestionType('open');
+        setIsMultipleChoice(false);
         setOption1('');
         setOption2('');
         setOption3('');
         setOption4('');
         setCorrectOption(0);
+        setCorrectOptionIndices([]);
     };
 
     if (loading) return <div className="text-center mt-10 text-slate-500">Wczytuję bank pytań...</div>;
@@ -200,7 +210,7 @@ export const QuestionBankDetailsPage = () => {
                                                 name="type"
                                                 value="open"
                                                 checked={newQuestionType === 'open'}
-                                                onChange={() => setNewQuestionType('open')}
+                                                onChange={() => { setNewQuestionType('open'); setIsMultipleChoice(false); }}
                                                 className="text-indigo-600 focus:ring-indigo-500"
                                             />
                                             <span className="text-slate-700">Otwarte</span>
@@ -210,11 +220,22 @@ export const QuestionBankDetailsPage = () => {
                                                 type="radio"
                                                 name="type"
                                                 value="closed"
-                                                checked={newQuestionType === 'closed'}
-                                                onChange={() => setNewQuestionType('closed')}
+                                                checked={newQuestionType === 'closed' && !isMultipleChoice}
+                                                onChange={() => { setNewQuestionType('closed'); setIsMultipleChoice(false); }}
                                                 className="text-indigo-600 focus:ring-indigo-500"
                                             />
-                                            <span className="text-slate-700">Wielokrotnego wyboru</span>
+                                            <span className="text-slate-700">Zamknięte (jednokrotnego)</span>
+                                        </label>
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="type"
+                                                value="closed-multi"
+                                                checked={newQuestionType === 'closed' && isMultipleChoice}
+                                                onChange={() => { setNewQuestionType('closed'); setIsMultipleChoice(true); }}
+                                                className="text-indigo-600 focus:ring-indigo-500"
+                                            />
+                                            <span className="text-slate-700">Zamknięte (wielokrotnego)</span>
                                         </label>
                                     </div>
                                 </div>
@@ -226,10 +247,20 @@ export const QuestionBankDetailsPage = () => {
                                             {[option1, option2, option3, option4].map((_, idx) => (
                                                 <div key={idx} className="flex items-center gap-3">
                                                     <input
-                                                        type="radio"
-                                                        name="correctOption"
-                                                        checked={correctOption === idx}
-                                                        onChange={() => setCorrectOption(idx)}
+                                                        type={isMultipleChoice ? "checkbox" : "radio"}
+                                                        name={isMultipleChoice ? `correctOption-${idx}` : "correctOption"}
+                                                        checked={isMultipleChoice ? correctOptionIndices.includes(idx) : correctOption === idx}
+                                                        onChange={(e) => {
+                                                            if (isMultipleChoice) {
+                                                                if (e.target.checked) {
+                                                                    setCorrectOptionIndices([...correctOptionIndices, idx]);
+                                                                } else {
+                                                                    setCorrectOptionIndices(correctOptionIndices.filter(i => i !== idx));
+                                                                }
+                                                            } else {
+                                                                setCorrectOption(idx);
+                                                            }
+                                                        }}
                                                     />
                                                     <input
                                                         className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-md text-slate-900 focus:border-indigo-500 outline-none text-sm"
@@ -245,7 +276,7 @@ export const QuestionBankDetailsPage = () => {
                                                 </div>
                                             ))}
                                         </div>
-                                        <p className="text-xs text-slate-500">Wybierz przycisk radio obok poprawnej odpowiedzi.</p>
+                                        <p className="text-xs text-slate-500">Wybierz {isMultipleChoice ? "checkboxe" : "przycisk radio"} obok poprawnej odpowiedzi.</p>
                                     </div>
                                 )}
 

@@ -198,6 +198,11 @@ urlpatterns = [
         name="quiz-submit",
     ),
     path(
+        "api/quizzes/<int:pk>/review/",
+        QuizViewSet.as_view({"get": "review"}),
+        name="quiz-review",
+    ),
+    path(
         "api/questions/",
         QuestionViewSet.as_view({"get": "list", "post": "create"}),
         name="question-list",

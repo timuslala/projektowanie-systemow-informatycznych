@@ -9,5 +9,6 @@ class QuestionResponse(models.Model):
     selected_option = models.PositiveSmallIntegerField(
         null=True, blank=True
     )  # For multiple choice questions
+    selected_options = models.JSONField(default=list, blank=True, help_text="List of selected option indices (1-based) for multiple choice")
     instructor_comment = models.TextField(null=True, blank=True)
     points = models.DecimalField(max_digits=6, decimal_places=2, default=0)

@@ -65,10 +65,14 @@ class QuestionViewSet(viewsets.ModelViewSet):
         
         if q_type == 'closed' or q_type == 'multiple_choice':
             options = data.get('options', [])
-            correct_idx = int(data.get('correctOption', 0)) # Assuming 0-based from frontend
+            is_multiple_choice = data.get('isMultipleChoice', False)
             
              # Ensure 4 options
             opts = (options + [""] * 4)[:4]
+            
+            # Frontend sends 0-based indices
+            correct_idx = data.get('correctOption', 0) 
+            correct_options_list = data.get('correctOptions', []) # List of 0-based indices
             
             mco = MultipleChoiceOption.objects.create(
                 text=text,
@@ -78,7 +82,9 @@ class QuestionViewSet(viewsets.ModelViewSet):
                 option2=opts[1],
                 option3=opts[2],
                 option4=opts[3],
-                correct_option=correct_idx + 1 # Model usage likely 1-indexed? checking.. yes in questionbank/views.py it used +1
+                correct_option=(int(correct_idx) + 1) if not is_multiple_choice else 1, # Default to 1 if multiple choice, field is required
+                is_multiple_choice=is_multiple_choice,
+                correct_options=[i + 1 for i in correct_options_list] if is_multiple_choice else []
             )
             if bank:
                 bank.questions.add(mco)

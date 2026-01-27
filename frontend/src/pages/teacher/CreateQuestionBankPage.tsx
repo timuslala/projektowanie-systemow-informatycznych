@@ -58,8 +58,10 @@ export const CreateQuestionBankPage = () => {
     const [newQuestionText, setNewQuestionText] = useState('');
     const [newQuestionTags, setNewQuestionTags] = useState('');
     const [isOpenEnded, setIsOpenEnded] = useState(false);
+    const [isMultipleChoice, setIsMultipleChoice] = useState(false);
     const [options, setOptions] = useState(['', '', '', '']);
     const [correctOptionIndex, setCorrectOptionIndex] = useState(0);
+    const [correctOptionIndices, setCorrectOptionIndices] = useState<number[]>([]);
 
     const handleCreateBank = async () => {
         setLoading(true);
@@ -108,6 +110,8 @@ export const CreateQuestionBankPage = () => {
                 type: isOpenEnded ? 'open' : 'closed', // 'open' maps to is_open_ended=True in backend view
                 options: isOpenEnded ? [] : options,
                 correctOption: isOpenEnded ? 0 : correctOptionIndex,
+                correctOptions: isOpenEnded ? [] : correctOptionIndices,
+                isMultipleChoice: isOpenEnded ? false : isMultipleChoice,
                 tags: newQuestionTags
             };
 
@@ -139,8 +143,10 @@ export const CreateQuestionBankPage = () => {
         setNewQuestionText('');
         setNewQuestionTags('');
         setIsOpenEnded(false);
+        setIsMultipleChoice(false);
         setOptions(['', '', '', '']);
         setCorrectOptionIndex(0);
+        setCorrectOptionIndices([]);
     };
 
     return (
@@ -260,15 +266,41 @@ export const CreateQuestionBankPage = () => {
                                     onChange={(e) => setNewQuestionTags(e.target.value)}
                                 />
 
-                                <label className="flex items-center gap-2 cursor-pointer w-fit">
-                                    <input
-                                        type="checkbox"
-                                        checked={isOpenEnded}
-                                        onChange={(e) => setIsOpenEnded(e.target.checked)}
-                                        className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-600"
-                                    />
-                                    <span className="text-slate-900 font-medium">Pytanie otwarte</span>
-                                </label>
+                                <div className="space-y-4">
+                                    <label className="block text-sm font-medium text-slate-700">Typ pytania</label>
+                                    <div className="flex gap-4 flex-wrap">
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="qType"
+                                                checked={isOpenEnded}
+                                                onChange={() => { setIsOpenEnded(true); setIsMultipleChoice(false); }}
+                                                className="w-4 h-4 text-blue-600 focus:ring-blue-600"
+                                            />
+                                            <span className="text-slate-900">Otwarte</span>
+                                        </label>
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="qType"
+                                                checked={!isOpenEnded && !isMultipleChoice}
+                                                onChange={() => { setIsOpenEnded(false); setIsMultipleChoice(false); }}
+                                                className="w-4 h-4 text-blue-600 focus:ring-blue-600"
+                                            />
+                                            <span className="text-slate-900">Zamknięte (jednokrotnego wyboru)</span>
+                                        </label>
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="qType"
+                                                checked={!isOpenEnded && isMultipleChoice}
+                                                onChange={() => { setIsOpenEnded(false); setIsMultipleChoice(true); }}
+                                                className="w-4 h-4 text-blue-600 focus:ring-blue-600"
+                                            />
+                                            <span className="text-slate-900">Zamknięte (wielokrotnego wyboru)</span>
+                                        </label>
+                                    </div>
+                                </div>
 
                                 {!isOpenEnded && (
                                     <div className="space-y-3">
@@ -286,10 +318,20 @@ export const CreateQuestionBankPage = () => {
                                                 />
                                                 <label className="flex items-center gap-2 cursor-pointer min-w-[100px]">
                                                     <input
-                                                        type="radio"
-                                                        name="correctOption"
-                                                        checked={correctOptionIndex === idx}
-                                                        onChange={() => setCorrectOptionIndex(idx)}
+                                                        type={isMultipleChoice ? "checkbox" : "radio"}
+                                                        name={isMultipleChoice ? `correctOption-${idx}` : "correctOption"}
+                                                        checked={isMultipleChoice ? correctOptionIndices.includes(idx) : correctOptionIndex === idx}
+                                                        onChange={(e) => {
+                                                            if (isMultipleChoice) {
+                                                                if (e.target.checked) {
+                                                                    setCorrectOptionIndices([...correctOptionIndices, idx]);
+                                                                } else {
+                                                                    setCorrectOptionIndices(correctOptionIndices.filter(i => i !== idx));
+                                                                }
+                                                            } else {
+                                                                setCorrectOptionIndex(idx);
+                                                            }
+                                                        }}
                                                         className="w-4 h-4 border-slate-300 text-blue-600 focus:ring-blue-600"
                                                     />
                                                     <span className="text-slate-700 text-sm">Poprawna</span>

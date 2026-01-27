@@ -69,6 +69,7 @@ export const CourseManagePage = () => {
     const [selectedBankIds, setSelectedBankIds] = useState<string[]>([]);
     const [randomizeOrder, setRandomizeOrder] = useState(true);
     const [showCorrectAnswers, setShowCorrectAnswers] = useState(true);
+    const [selectedModuleId, setSelectedModuleId] = useState<string>('');
 
     // Student Modal (for adding students)
     const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
@@ -125,7 +126,8 @@ export const CourseManagePage = () => {
                 course: parseInt(id),
                 question_banks: selectedBankIds.map(bankId => parseInt(bankId)),
                 randomize_question_order: randomizeOrder,
-                show_correct_answers_on_completion: showCorrectAnswers
+                show_correct_answers_on_completion: showCorrectAnswers,
+                module: selectedModuleId ? parseInt(selectedModuleId) : null
             });
             setQuizzes([...quizzes, response.data]);
             closeQuizModal();
@@ -204,6 +206,7 @@ export const CourseManagePage = () => {
         setSelectedBankIds([]);
         setRandomizeOrder(true);
         setShowCorrectAnswers(true);
+        setSelectedModuleId('');
     };
 
     const filteredEligibleStudents = eligibleStudents.filter(student =>
@@ -340,6 +343,22 @@ export const CourseManagePage = () => {
                                     <p className="text-xs text-slate-500 mt-1">{selectedBankIds.length} wybranych banków pytań</p>
                                 </div>
 
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Moduł (opcjonalnie)</label>
+                                    <select
+                                        className="w-full px-4 py-2 bg-white border border-slate-300 rounded-md text-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                                        value={selectedModuleId}
+                                        onChange={(e) => setSelectedModuleId(e.target.value)}
+                                    >
+                                        <option value="">-- Brak modułu --</option>
+                                        {modules.map(module => (
+                                            <option key={module.id} value={module.id}>
+                                                {module.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
                                 <div className="flex justify-end gap-3 pt-4">
                                     <Button variant="ghost" onClick={closeQuizModal} className="text-slate-600 hover:text-slat  e-900">Anuluj</Button>
                                     <Button onClick={handleCreateQuiz} disabled={selectedBankIds.length === 0}>Utwórz quiz</Button>
@@ -368,7 +387,7 @@ export const CourseManagePage = () => {
                         <div className="flex justify-between items-center">
                             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                                 <BookOpen className="w-5 h-5 text-indigo-600" />
-                                Modules
+                                Moduły
                             </h2>
                             <Button onClick={() => setIsModuleModalOpen(true)} size="sm" leftIcon={<Plus className="w-4 h-4" />}>
                                 Dodaj moduł

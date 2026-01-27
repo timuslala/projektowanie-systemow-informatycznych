@@ -43,12 +43,12 @@ export const QuizReviewPage = () => {
     useEffect(() => {
         const fetchReview = async () => {
             try {
-                // Mocking the endpoint structure for now as it might not depend on exact backend implementation yet
-                // Ideally: GET /api/quizzes/{id}/review/
                 const response = await api.get(`/api/quizzes/${id}/review/`);
                 setResult(response.data);
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Failed to load quiz review", error);
+                // Redirect if 403 or error (e.g. not finished or not allowed)
+                // navigate('/dashboard'); // Optional: auto redirect
             } finally {
                 setLoading(false);
             }
@@ -56,62 +56,72 @@ export const QuizReviewPage = () => {
         fetchReview();
     }, [id]);
 
-    if (loading) return <div className="text-center mt-10 text-slate-500">Loading review...</div>;
-    if (!result) return <div className="text-center mt-10 text-slate-500">Failed to load review.</div>;
+    if (loading) return <div className="text-center mt-10 text-white">Wczytywanie wyników...</div>;
+    if (!result) return <div className="text-center mt-10 text-slate-400">Nie udało się wczytać wyników (brak dostępu lub błąd).</div>;
 
     return (
-        <div className="max-w-3xl mx-auto space-y-6 animate-fade-in my-8">
+        <div className="max-w-3xl mx-auto space-y-6 animate-fade-in my-8 pb-10">
             <Button
                 variant="ghost"
                 size="sm"
                 leftIcon={<ArrowLeft className="w-4 h-4" />}
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate(-1)}
                 className="mb-4"
             >
-                Back to Dashboard
+                Powrót
             </Button>
 
             <Card className="text-center py-8">
-                <h1 className="text-3xl font-bold text-slate-900 mb-2">Przegląd odpowiedzi - {result.quiz_title}</h1>
+                <h1 className="text-3xl font-bold text-slate-900 mb-2">Przegląd odpowiedzi</h1>
+                <h2 className="text-xl text-slate-600">{result.quiz_title}</h2>
+                <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-full text-indigo-700 font-semibold">
+                    Wynik: {result.score} / {result.total_questions}
+                </div>
             </Card>
 
             <div className="space-y-6">
                 {result.questions.map((question, index) => {
+                    // Match response by question_id
                     const response = result.responses.find(r => r.question_id === question.id);
                     const isCorrect = response?.is_correct;
 
                     return (
-                        <Card key={question.id} className="flex flex-col gap-4">
+                        <Card key={question.id} className={`flex flex-col gap-4 border-l-4 ${isCorrect ? 'border-l-green-500' : 'border-l-red-500'}`}>
                             <h3 className="text-lg font-medium text-slate-900">
                                 {index + 1}. {question.text}
                             </h3>
 
                             <div className="space-y-2">
-                                {/* User Answer Display */}
-                                <div className="flex items-center gap-2">
-                                    {isCorrect ? (
-                                        <CheckCircle className="w-5 h-5 text-green-500" />
-                                    ) : (
-                                        <XCircle className="w-5 h-5 text-red-500" />
-                                    )}
-                                    <span className={isCorrect ? "text-green-600 font-medium" : "text-red-500"}>
-                                        {question.type === 'multiple_choice'
-                                            ? question.options?.find(o => o.id === response?.selected_option_id)?.text || "No answer"
-                                            : response?.text_response || "No answer"}
-                                    </span>
-                                    {!isCorrect && <span className="text-xs text-red-400 ml-2">(Twoja odpowiedź)</span>}
-                                </div>
+                                {/* Only show choices if multiple choice */}
+                                {question.type === 'multiple_choice' && (
+                                    <div className="space-y-2 ml-4">
+                                        {question.options?.map(opt => {
+                                            const isSelected = response?.selected_option_id === opt.id;
+                                            const isCorrectOption = opt.is_correct;
 
-                                {/* Correct Answer Display (if wrong) */}
-                                {!isCorrect && (
-                                    <div className="flex items-center gap-2 mt-2">
-                                        <CheckCircle className="w-5 h-5 text-indigo-500" />
-                                        <span className="text-indigo-600 font-medium">
-                                            {question.type === 'multiple_choice'
-                                                ? question.options?.find(o => o.is_correct)?.text
-                                                : question.correct_panswer}
-                                        </span>
-                                        <span className="text-xs text-indigo-400 ml-2">(Prawidłowa odpowiedź)</span>
+                                            let optionClass = "p-3 rounded-lg border flex justify-between items-center ";
+                                            if (isSelected && isCorrectOption) optionClass += "bg-green-50 border-green-500 text-green-700";
+                                            else if (isSelected && !isCorrectOption) optionClass += "bg-red-50 border-red-500 text-red-700";
+                                            else if (isCorrectOption) optionClass += "bg-indigo-50 border-indigo-500 text-indigo-700"; // Show correct answer if missed
+                                            else optionClass += "bg-white border-slate-200 text-slate-600 opacity-70";
+
+                                            return (
+                                                <div key={opt.id} className={optionClass}>
+                                                    <span>{opt.text}</span>
+                                                    {isSelected && isCorrectOption && <CheckCircle className="w-5 h-5 text-green-500 ms-2" />}
+                                                    {isSelected && !isCorrectOption && <XCircle className="w-5 h-5 text-red-500 ms-2" />}
+                                                    {!isSelected && isCorrectOption && <CheckCircle className="w-5 h-5 text-indigo-500 ms-2" />}
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                )}
+
+                                {question.type === 'open_ended' && (
+                                    <div className="ml-4 p-4 bg-slate-50 rounded-lg">
+                                        <p className="text-sm text-slate-500 mb-1">Twoja odpowiedź:</p>
+                                        <p className="text-slate-900 italic">{response?.text_response || "(Brak odpowiedzi)"}</p>
+                                        {/* TODO: Show correct answer for open ended if available */}
                                     </div>
                                 )}
                             </div>

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Quiz
 from question.models import Question, MultipleChoiceOption
+from questionresponse.models import QuestionResponse
 
 class QuestionSerializer(serializers.ModelSerializer):
     options = serializers.SerializerMethodField()
@@ -39,6 +40,8 @@ class FullQuestionSerializer(QuestionSerializer):
 
 
 class QuizSerializer(serializers.ModelSerializer):
+    is_finished = serializers.SerializerMethodField()
+
     class Meta:
         model = Quiz
         fields = [
@@ -49,5 +52,27 @@ class QuizSerializer(serializers.ModelSerializer):
             "randomize_question_order", 
             "show_correct_answers_on_completion", 
             "question_banks", 
-            "course"
+            "course",
+            "module",
+            "is_finished"
         ]
+
+    def get_is_finished(self, obj):
+        user = self.context['request'].user
+        if not user.is_authenticated:
+            return False
+            
+        # Get all questions in the quiz
+        # This logic finds if there is ANY response for any question in the quiz by this user.
+        # This assumes "finished" means "attempted at least once".
+        # Optimziation: This can be N+1 if not careful, but for now we implement logic.
+        
+        # Collect all question IDs from all banks
+        question_ids = set()
+        for bank in obj.question_banks.all():
+            question_ids.update(bank.questions.values_list('id', flat=True))
+            
+        if not question_ids:
+            return False
+            
+        return QuestionResponse.objects.filter(user=user, question_id__in=question_ids).exists()
