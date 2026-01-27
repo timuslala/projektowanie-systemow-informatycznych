@@ -17,7 +17,7 @@ export const VerifyEmailPage = () => {
 
             if (!email || !code) {
                 setStatus('error');
-                setMessage('Invalid verification link.');
+                setMessage('Nieprawidłowy link weryfikacyjny.');
                 return;
             }
 
@@ -30,7 +30,7 @@ export const VerifyEmailPage = () => {
             } catch (err: any) {
                 console.error(err);
                 setStatus('error');
-                setMessage(err.response?.data?.message || err.response?.data?.code || 'Verification failed.');
+                setMessage(err.response?.data?.message || err.response?.data?.code || 'Weryfikacja nie powiodła się.');
             }
         };
 
@@ -44,7 +44,7 @@ export const VerifyEmailPage = () => {
                     {status === 'verifying' && (
                         <>
                             <div className="w-12 h-12 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin" />
-                            <h2 className="text-xl font-bold text-slate-900">Verifying your email...</h2>
+                            <h2 className="text-xl font-bold text-slate-900">Weryfikacja adresu e-mail...</h2>
                         </>
                     )}
 
@@ -53,11 +53,11 @@ export const VerifyEmailPage = () => {
                             <div className="w-16 h-16 rounded-full bg-green-50 text-green-500 flex items-center justify-center">
                                 <CheckCircle className="w-8 h-8" />
                             </div>
-                            <h2 className="text-xl font-bold text-slate-900">Email Verified!</h2>
-                            <p className="text-slate-500">Your account has been successfully activated.</p>
+                            <h2 className="text-xl font-bold text-slate-900">Adres e-mail zweryfikowany!</h2>
+                            <p className="text-slate-500">Twoje konto zostało pomyślnie aktywowane.</p>
                             <Link to="/login" className="w-full">
                                 <Button className="w-full" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                                    Proceed to Login
+                                    Przejdź do logowania
                                 </Button>
                             </Link>
                         </>
@@ -68,11 +68,11 @@ export const VerifyEmailPage = () => {
                             <div className="w-16 h-16 rounded-full bg-red-50 text-red-500 flex items-center justify-center">
                                 <XCircle className="w-8 h-8" />
                             </div>
-                            <h2 className="text-xl font-bold text-slate-900">Verification Failed</h2>
+                            <h2 className="text-xl font-bold text-slate-900">Weryfikacja nie powiodła się.</h2>
                             <p className="text-slate-500">{message}</p>
                             <Link to="/login" className="w-full">
                                 <Button variant="outline" className="w-full">
-                                    Back to Login
+                                    Powrót do logowania
                                 </Button>
                             </Link>
                         </>

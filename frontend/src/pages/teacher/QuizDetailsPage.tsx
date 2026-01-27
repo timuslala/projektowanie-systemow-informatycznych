@@ -157,11 +157,11 @@ export const QuizDetailsPage = () => {
     };
 
     if (loading) {
-        return <div className="text-slate-500 text-center mt-10">Loading quiz details...</div>;
+        return <div className="text-slate-500 text-center mt-10">Wczytuję szczegóły quizu...</div>;
     }
 
     if (!quiz) {
-        return <div className="text-slate-500 text-center mt-10">Quiz not found.</div>;
+        return <div className="text-slate-500 text-center mt-10">Quiz nie został znaleziony.</div>;
     }
 
     return (
@@ -173,10 +173,10 @@ export const QuizDetailsPage = () => {
                         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={() => setIsEditOpen(false)} />
 
                         <div className="relative w-full max-w-lg transform overflow-hidden rounded-2xl bg-white border border-slate-200 p-6 text-left align-middle shadow-xl transition-all">
-                            <h2 className="text-xl font-bold text-slate-900 mb-6">Edit Quiz</h2>
+                            <h2 className="text-xl font-bold text-slate-900 mb-6">Edytuj quiz</h2>
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Title</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Tytuł</label>
                                     <input
                                         className="w-full px-4 py-2 bg-white border border-slate-300 rounded-md text-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                                         value={editForm.title}
@@ -184,7 +184,7 @@ export const QuizDetailsPage = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Description</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Opis</label>
                                     <input
                                         className="w-full px-4 py-2 bg-white border border-slate-300 rounded-md text-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                                         value={editForm.description}
@@ -192,7 +192,7 @@ export const QuizDetailsPage = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Time Limit (minutes)</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Limit czasu (minuty)</label>
                                     <input
                                         type="number"
                                         className="w-full px-4 py-2 bg-white border border-slate-300 rounded-md text-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
@@ -201,7 +201,7 @@ export const QuizDetailsPage = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Question Banks</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Banki pytań</label>
                                     <div className="max-h-40 overflow-y-auto border border-slate-300 rounded-md p-2 space-y-2">
                                         {allBanks.map(bank => (
                                             <div
@@ -214,11 +214,11 @@ export const QuizDetailsPage = () => {
                                             </div>
                                         ))}
                                     </div>
-                                    <p className="text-xs text-slate-500 mt-1">{editForm.selectedBanks.length} banks selected</p>
+                                    <p className="text-xs text-slate-500 mt-1">{editForm.selectedBanks.length} banków pytań wybranych</p>
                                 </div>
                                 <div className="flex justify-end gap-3 pt-4">
-                                    <Button variant="ghost" onClick={() => setIsEditOpen(false)} className="text-slate-600 hover:text-slate-900">Cancel</Button>
-                                    <Button onClick={handleUpdateQuiz}>Save Changes</Button>
+                                    <Button variant="ghost" onClick={() => setIsEditOpen(false)} className="text-slate-600 hover:text-slate-900">Anuluj</Button>
+                                    <Button onClick={handleUpdateQuiz}>Zapisz zmiany</Button>
                                 </div>
                             </div>
                         </div>
@@ -233,21 +233,21 @@ export const QuizDetailsPage = () => {
                 onClick={() => navigate('/quizzes')}
                 className="text-slate-500 hover:text-indigo-600"
             >
-                Back to Quizzes
+                Powrót do quizów
             </Button>
 
             <div className="flex flex-col md:flex-row justify-between md:items-start gap-6">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-900 mb-2">{quiz.title}</h1>
-                    <p className="text-slate-500 max-w-2xl">{quiz.description || "No description provided."}</p>
+                    <p className="text-slate-500 max-w-2xl">{quiz.description || "Brak opisu."}</p>
 
                     <div className="flex flex-wrap gap-4 mt-4">
                         <div className="flex items-center gap-2 text-sm text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full">
                             <Clock className="w-4 h-4" />
-                            <span>{quiz.time_limit_in_minutes} mins</span>
+                            <span>{quiz.time_limit_in_minutes} minut</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full">
-                            <span>Course ID: {quiz.course}</span>
+                            <span>Id kursu: {quiz.course}</span>
                         </div>
                     </div>
                 </div>
@@ -258,27 +258,27 @@ export const QuizDetailsPage = () => {
                         leftIcon={<Edit className="w-4 h-4" />}
                         onClick={() => setIsEditOpen(true)}
                     >
-                        Edit Quiz
+                        Edytuj quiz
                     </Button>
                     <Button
                         variant="danger"
                         leftIcon={<Trash className="w-4 h-4" />}
                         onClick={handleDelete}
                     >
-                        Delete
+                        Usuń quiz
                     </Button>
                 </div>
             </div>
 
             <div className="space-y-8">
                 <h2 className="text-xl font-semibold text-slate-900 border-b border-slate-200 pb-2">
-                    Questions Preview
+                    Podgląd pytań
                 </h2>
 
                 {groupedQuestions.length === 0 ? (
                     <div className="text-center py-12 bg-white rounded-lg border border-slate-200 border-dashed">
                         <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                        <p className="text-slate-500">No questions in this quiz.</p>
+                        <p className="text-slate-500">Brak pytań w tym quizie.</p>
                     </div>
                 ) : (
                     groupedQuestions.map((group, groupIdx) => (
@@ -299,7 +299,7 @@ export const QuizDetailsPage = () => {
                                                 <div className="flex justify-between items-start">
                                                     <p className="font-medium text-slate-900 text-lg">{q.text}</p>
                                                     <span className="text-xs font-medium px-2 py-1 rounded bg-slate-100 text-slate-500 uppercase tracking-wider">
-                                                        {q.type === 'multiple_choice' ? 'Multiple Choice' : 'Open Ended'}
+                                                        {q.type === 'multiple_choice' ? 'Wielokrotnego wyboru' : 'Jednokrotnego wyboru'}
                                                     </span>
                                                 </div>
 
@@ -318,7 +318,7 @@ export const QuizDetailsPage = () => {
 
                                                 {q.type === 'open_ended' && (
                                                     <div className="w-full h-24 bg-slate-50 border border-slate-200 rounded p-4 text-slate-400 italic text-sm">
-                                                        Student will type their answer here...
+                                                        Uczeń wpisze swoją odpowiedź tutaj...
                                                     </div>
                                                 )}
                                             </div>
@@ -326,7 +326,7 @@ export const QuizDetailsPage = () => {
                                     </Card>
                                 ))}
                                 {group.questions.length === 0 && (
-                                    <p className="text-slate-400 text-sm italic ml-4">This bank has no questions.</p>
+                                    <p className="text-slate-400 text-sm italic ml-4">Ten bank pytań jest pusty.</p>
                                 )}
                             </div>
                         </div>

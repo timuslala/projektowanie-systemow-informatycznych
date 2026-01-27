@@ -113,31 +113,31 @@ export const QuestionBankDetailsPage = () => {
         setCorrectOption(0);
     };
 
-    if (loading) return <div className="text-center mt-10 text-slate-500">Loading Question Bank...</div>;
-    if (!bank) return <div className="text-center mt-10 text-slate-500">Question Bank not found</div>;
+    if (loading) return <div className="text-center mt-10 text-slate-500">Wczytuję bank pytań...</div>;
+    if (!bank) return <div className="text-center mt-10 text-slate-500">Bank pytań nie został znaleziony</div>;
 
     return (
         <div className="max-w-[1400px] mx-auto py-8 px-4 animate-fade-in space-y-6">
             <div className="flex items-center gap-4">
                 <Button variant="ghost" onClick={() => navigate('/question-banks')} leftIcon={<ArrowLeft className="w-4 h-4" />}>
-                    Back
+                    Powrót
                 </Button>
                 <div>
                     <h1 className="text-3xl font-bold text-slate-900">{bank.title}</h1>
-                    <p className="text-slate-500">Manage questions in this bank</p>
+                    <p className="text-slate-500">Zarządzaj pytaniami w tym banku</p>
                 </div>
             </div>
 
             <div className="flex justify-end">
                 <Button onClick={() => setIsModalOpen(true)} leftIcon={<Plus className="w-4 h-4" />}>
-                    Add Question
+                    Dodaj pytanie
                 </Button>
             </div>
 
             <div className="space-y-4">
                 {questions.length === 0 ? (
                     <div className="p-12 border border-dashed border-slate-200 rounded-lg text-center text-slate-500 bg-white">
-                        No questions in this bank yet. Add one to get started.
+                        Brak pytań w tym banku. Dodaj pierwsze pytanie.
                     </div>
                 ) : (
                     questions.map((q, idx) => (
@@ -146,7 +146,7 @@ export const QuestionBankDetailsPage = () => {
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className={`text-xs px-2 py-0.5 rounded-full ${q.type === 'open' ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                                            {q.type === 'open' ? 'Open Ended' : 'Multiple Choice'}
+                                            {q.type === 'open' ? 'Otwarte' : 'Wielokrotnego wyboru'}
                                         </span>
                                     </div>
                                     <h3 className="text-lg font-medium text-slate-900">{q.text}</h3>
@@ -174,7 +174,7 @@ export const QuestionBankDetailsPage = () => {
                         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={closeModal} />
                         <div className="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white border border-slate-200 p-6 shadow-xl transition-all">
                             <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold text-slate-900">Add New Question</h2>
+                                <h2 className="text-xl font-bold text-slate-900">Dodaj nowe pytanie</h2>
                                 <button onClick={closeModal} className="text-slate-400 hover:text-slate-600">
                                     <X className="w-5 h-5" />
                                 </button>
@@ -182,17 +182,17 @@ export const QuestionBankDetailsPage = () => {
 
                             <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Question Text</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Treść pytania</label>
                                     <textarea
                                         className="w-full px-4 py-2 bg-white border border-slate-300 rounded-md text-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none h-24"
                                         value={newQuestionText}
                                         onChange={(e) => setNewQuestionText(e.target.value)}
-                                        placeholder="Enter question content..."
+                                        placeholder="Wprowadź treść pytania..."
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-2">Type</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Typ pytania</label>
                                     <div className="flex gap-4">
                                         <label className="flex items-center gap-2 cursor-pointer">
                                             <input
@@ -203,7 +203,7 @@ export const QuestionBankDetailsPage = () => {
                                                 onChange={() => setNewQuestionType('open')}
                                                 className="text-indigo-600 focus:ring-indigo-500"
                                             />
-                                            <span className="text-slate-700">Open Ended</span>
+                                            <span className="text-slate-700">Otwarte</span>
                                         </label>
                                         <label className="flex items-center gap-2 cursor-pointer">
                                             <input
@@ -214,14 +214,14 @@ export const QuestionBankDetailsPage = () => {
                                                 onChange={() => setNewQuestionType('closed')}
                                                 className="text-indigo-600 focus:ring-indigo-500"
                                             />
-                                            <span className="text-slate-700">Multiple Choice</span>
+                                            <span className="text-slate-700">Wielokrotnego wyboru</span>
                                         </label>
                                     </div>
                                 </div>
 
                                 {newQuestionType === 'closed' && (
                                     <div className="space-y-3 bg-slate-50 p-4 rounded-lg">
-                                        <p className="text-sm font-medium text-slate-700">Options</p>
+                                        <p className="text-sm font-medium text-slate-700">Opcje</p>
                                         <div className="grid gap-3">
                                             {[option1, option2, option3, option4].map((_, idx) => (
                                                 <div key={idx} className="flex items-center gap-3">
@@ -233,7 +233,7 @@ export const QuestionBankDetailsPage = () => {
                                                     />
                                                     <input
                                                         className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-md text-slate-900 focus:border-indigo-500 outline-none text-sm"
-                                                        placeholder={`Option ${idx + 1}`}
+                                                        placeholder={`Opcja ${idx + 1}`}
                                                         value={idx === 0 ? option1 : idx === 1 ? option2 : idx === 2 ? option3 : option4}
                                                         onChange={(e) => {
                                                             if (idx === 0) setOption1(e.target.value);
@@ -245,13 +245,13 @@ export const QuestionBankDetailsPage = () => {
                                                 </div>
                                             ))}
                                         </div>
-                                        <p className="text-xs text-slate-500">Select the radio button next to the correct answer.</p>
+                                        <p className="text-xs text-slate-500">Wybierz przycisk radio obok poprawnej odpowiedzi.</p>
                                     </div>
                                 )}
 
                                 <div className="flex justify-end gap-3 pt-4">
-                                    <Button variant="ghost" onClick={closeModal}>Cancel</Button>
-                                    <Button onClick={handleAddQuestion} disabled={!newQuestionText}>Save Question</Button>
+                                    <Button variant="ghost" onClick={closeModal}>Anuluj</Button>
+                                    <Button onClick={handleAddQuestion} disabled={!newQuestionText}>Zapisz pytanie</Button>
                                 </div>
                             </div>
                         </div>

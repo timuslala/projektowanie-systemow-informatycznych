@@ -109,7 +109,7 @@ export const TeacherDashboard = () => {
                                 </div>
                             </div>
 
-                            <div className="flex justify-between items-center mt-8 gap-4">
+                            <div className="flex flex-col lg:flex-row justify-between items-center mt-8 gap-4">
                                 <Button
                                     variant="outline"
                                     onClick={() => navigate(`/courses/${course.id}`)}

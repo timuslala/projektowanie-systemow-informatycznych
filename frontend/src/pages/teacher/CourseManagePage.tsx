@@ -490,7 +490,7 @@ export const CourseManagePage = () => {
                                     </div>
                                     <div className="mt-4">
                                         <div className="flex justify-between text-xs text-slate-500 mb-1">
-                                            <span>Progress</span>
+                                            <span>Postęp</span>
                                             <span>{Math.round(progress.percent_complete)}%</span>
                                         </div>
                                         <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
@@ -513,7 +513,7 @@ export const CourseManagePage = () => {
                             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={() => setIsStudentModalOpen(false)} />
                             <div className="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white border border-slate-200 p-6 shadow-xl transition-all">
                                 <div className="flex justify-between items-center mb-6">
-                                    <h2 className="text-xl font-bold text-slate-900">Enroll Students</h2>
+                                    <h2 className="text-xl font-bold text-slate-900">Zapisz uczniów</h2>
                                     <Button variant="ghost" size="sm" onClick={() => setIsStudentModalOpen(false)}>X</Button>
                                 </div>
 
@@ -521,7 +521,7 @@ export const CourseManagePage = () => {
                                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                                     <input
                                         className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-md text-slate-900 focus:border-indigo-500 outline-none"
-                                        placeholder="Search students by name or email..."
+                                        placeholder="Wyszukaj uczniów po emailu lub imieniu i nazwisku..."
                                         value={studentSearch}
                                         onChange={(e) => setStudentSearch(e.target.value)}
                                     />
@@ -530,7 +530,7 @@ export const CourseManagePage = () => {
                                 <div className="max-h-[60vh] overflow-y-auto space-y-2">
                                     {filteredEligibleStudents.length === 0 ? (
                                         <div className="text-center py-8 text-slate-500">
-                                            {studentSearch ? 'No matching students found.' : 'No eligible students available to enroll.'}
+                                            {studentSearch ? 'Nie znaleziono pasujących uczniów.' : 'Brak uczniów do zapisania.'}
                                         </div>
                                     ) : (
                                         filteredEligibleStudents.map(student => (

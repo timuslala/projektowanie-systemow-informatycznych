@@ -34,12 +34,12 @@ export const RegisterPage = () => {
                             <CheckCircle className="w-8 h-8" />
                         </div>
                         <p className="text-slate-500">
-                            We've sent a verification link to <span className="text-slate-900 font-medium">{email}</span>.
-                            Please check your inbox to activate your account.
+                            Wysłaliśmy link weryfikacyjny na adres <span className="text-slate-900 font-medium">{email}</span>.
+                            Sprawdź swoją skrzynkę odbiorczą, aby aktywować swoje konto.
                         </p>
                         <Link to="/login" className="w-full">
                             <Button variant="outline" className="w-full">
-                                Back to Login
+                                Przejdź do logowania
                             </Button>
                         </Link>
                     </div>
@@ -50,7 +50,7 @@ export const RegisterPage = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-4 bg-white relative overflow-hidden">
-            <Card className="w-full max-w-md animate-fade-in shadow-none border-none" title="Create Account" description="Join our community today">
+            <Card className="w-full max-w-md animate-fade-in shadow-none border-none" title="Rejestracja" description="Dołącz do naszej społeczności">
 
                 {error && (
                     <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-lg text-sm mb-4">
@@ -66,7 +66,7 @@ export const RegisterPage = () => {
                             }`}
                     >
                         <GraduationCap className="w-4 h-4" />
-                        <span>Student</span>
+                        <span>Uczeń</span>
                     </button>
                     <button
                         onClick={() => setRole('teacher')}
@@ -74,7 +74,7 @@ export const RegisterPage = () => {
                             }`}
                     >
                         <School className="w-4 h-4" />
-                        <span>Teacher</span>
+                        <span>Nauczyciel</span>
                     </button>
                 </div>
 
@@ -82,7 +82,7 @@ export const RegisterPage = () => {
                     <Input
                         id="name"
                         type="text"
-                        label="Full Name"
+                        label="Imię i nazwisko"
                         placeholder="John Doe"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
@@ -93,7 +93,7 @@ export const RegisterPage = () => {
                     <Input
                         id="email"
                         type="email"
-                        label="Email Address"
+                        label="Adres e-mail"
                         placeholder="you@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -104,7 +104,7 @@ export const RegisterPage = () => {
                     <Input
                         id="password"
                         type="password"
-                        label="Password"
+                        label="Hasło"
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -113,14 +113,14 @@ export const RegisterPage = () => {
                     />
 
                     <Button type="submit" className="w-full" isLoading={isLoading} rightIcon={<ArrowRight className="w-5 h-5" />}>
-                        Create Account
+                        Zarejestruj się
                     </Button>
                 </form>
 
                 <div className="mt-6 text-center text-sm text-slate-500">
-                    Already have an account?{' '}
+                    Jesteś już zarejestrowany?{' '}
                     <Link to="/login" className="text-indigo-600 hover:text-indigo-700 font-medium transition-colors">
-                        Sign in
+                        Zaloguj się
                     </Link>
                 </div>
             </Card>

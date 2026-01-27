@@ -44,12 +44,12 @@ export const QuizzesPage = () => {
         <div className="space-y-8 animate-fade-in max-w-[1400px] mx-auto py-8 px-4">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900 mb-2">Quizzes</h1>
-                    <p className="text-slate-500">Manage quizzes and tests for your students.</p>
+                    <h1 className="text-3xl font-bold text-slate-900 mb-2">Quizy</h1>
+                    <p className="text-slate-500">Zarządzaj quizami dla uczniów.</p>
                 </div>
                 <Link to="/tests/create">
                     <Button leftIcon={<PlusCircle className="w-4 h-4" />}>
-                        Create New Quiz
+                        Stwórz nowy quiz
                     </Button>
                 </Link>
             </div>
@@ -57,10 +57,10 @@ export const QuizzesPage = () => {
             {quizzes.length === 0 ? (
                 <div className="text-center py-12 bg-white rounded-lg border border-slate-200">
                     <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-slate-900 mb-2">No Quizzes Yet</h3>
-                    <p className="text-slate-500 mb-6">Create your first quiz to evaluate students.</p>
+                    <h3 className="text-lg font-medium text-slate-900 mb-2">Nie masz żadnych quizów</h3>
+                    <p className="text-slate-500 mb-6">Stwórz swój pierwszy quiz, aby ocenić uczniów.</p>
                     <Link to="/tests/create">
-                        <Button variant="outline">Create New Quiz</Button>
+                        <Button variant="outline">Stwórz nowy quiz</Button>
                     </Link>
                 </div>
             ) : (
@@ -81,14 +81,14 @@ export const QuizzesPage = () => {
                                             {quiz.title}
                                         </h3>
                                         <p className="text-sm text-slate-500 mt-1 line-clamp-2">
-                                            {quiz.description || "No description provided."}
+                                            {quiz.description || "Brak opisu."}
                                         </p>
                                         <div className="flex items-center gap-2 mt-3 text-xs text-slate-400">
                                             <span className="flex items-center gap-1">
                                                 <Clock className="w-3 h-3" /> {quiz.time_limit_in_minutes} min
                                             </span>
                                             <span>•</span>
-                                            <span>Course ID: {quiz.course}</span>
+                                            <span>Id kursu: {quiz.course}</span>
                                         </div>
                                     </div>
                                 </div>

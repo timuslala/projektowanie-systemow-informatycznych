@@ -26,7 +26,7 @@ export const LoginPage = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-4 bg-white relative overflow-hidden">
-            <Card className="w-full max-w-md animate-fade-in shadow-none border-none" title="Welcome Back" description="Sign in to continue your learning journey">
+            <Card className="w-full max-w-md animate-fade-in shadow-none border-none" title="Witaj" description="Zaloguj się aby kontynuować">
 
                 {/* Role Toggles removed - Role is determined by backend on login */}
                 {error && (
@@ -39,7 +39,7 @@ export const LoginPage = () => {
                     <Input
                         id="email"
                         type="email"
-                        label="Email Address"
+                        label="Adres email"
                         placeholder="you@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -50,31 +50,22 @@ export const LoginPage = () => {
                     <Input
                         id="password"
                         type="password"
-                        label="Password"
+                        label="Hasło"
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         leftIcon={<Lock className="w-5 h-5" />}
                         required
                     />
-
-                    <div className="flex justify-between items-center text-sm">
-                        <label className="flex items-center text-slate-500 cursor-pointer">
-                            <input type="checkbox" className="mr-2 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600" />
-                            Remember me
-                        </label>
-                        <a href="#" className="text-indigo-600 hover:text-indigo-700 transition-colors">Forgot password?</a>
-                    </div>
-
                     <Button type="submit" className="w-full" isLoading={isLoading} rightIcon={<LogIn className="w-5 h-5" />}>
-                        Sign In
+                        Zaloguj się
                     </Button>
                 </form>
 
                 <div className="mt-6 text-center text-sm text-slate-500">
-                    Don't have an account?{' '}
+                    Nie masz konta?{' '}
                     <Link to="/register" className="text-indigo-600 hover:text-indigo-700 font-medium transition-colors">
-                        Create account
+                        Zarejestruj się
                     </Link>
                 </div>
             </Card>
