@@ -18,6 +18,7 @@ interface Question {
     is_open_ended: boolean;
     options?: QuestionOption[];
     correct_option?: number; // 1-based index from backend
+    correct_options?: number[]; // indices of correct options
 }
 
 interface Quiz {
@@ -150,7 +151,7 @@ export const QuizDetailsPage = () => {
     };
 
     const handleDelete = async () => {
-        if (!window.confirm("Are you sure you want to delete this quiz?")) return;
+        if (!window.confirm("Czy na pewno chcesz usunąć ten quiz?")) return;
         try {
             await api.delete(`/api/quizzes/${id}/`);
             navigate('/quizzes');
@@ -335,7 +336,7 @@ export const QuizDetailsPage = () => {
                                                 {(q.type === 'single_choice' || q.type === 'multiple_choice') && q.options && (
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
                                                         {q.options.map((opt, optIdx) => {
-                                                            const isCorrect = q.correct_option === optIdx + 1;
+                                                            const isCorrect = q.correct_option === optIdx + 1 || (q.correct_options && q.correct_options.includes(optIdx + 1));
                                                             return (
                                                                 <div
                                                                     key={optIdx}

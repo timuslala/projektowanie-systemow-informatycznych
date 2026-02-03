@@ -5,13 +5,18 @@ import api from '../../services/api';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 
+interface QuestionOption {
+    id: number;
+    text: string;
+}
+
 interface Question {
     id: number;
     text: string;
     type: 'open' | 'single_choice' | 'multiple_choice';
-    options?: string[]; // simplified for display
-    correctOption?: number;
-    correctOptions?: number[]; // indices
+    options?: QuestionOption[];
+    correct_option?: number;
+    correct_options?: number[]; // indices
     question_bank: number;
 }
 
@@ -119,27 +124,27 @@ export const QuestionBankDetailsPage = () => {
             setNewQuestionType('closed');
             if (question.type === 'multiple_choice') {
                 setIsMultipleChoice(true);
-                setCorrectOptionIndices(question.correctOptions || []);
+                // Backend sends 1-based indices, frontend uses 0-based
+                setCorrectOptionIndices((question.correct_options || []).map(idx => idx - 1));
             } else {
                 setIsMultipleChoice(false);
-                setCorrectOption(question.correctOption !== undefined ? question.correctOption - 1 : 0); // Backend 1-based to Frontend 0-based
+                setCorrectOption(question.correct_option !== undefined ? question.correct_option - 1 : 0); // Backend 1-based to Frontend 0-based
             }
 
             // Populate options
-            // Since API might return just texts or we need to ensure we have options
-            // The question interface has 'options?: string[]'
-            const opts = question.options || ['', '', '', ''];
-            setOption1(opts[0] || '');
-            setOption2(opts[1] || '');
-            setOption3(opts[2] || '');
-            setOption4(opts[3] || '');
+            // The API returns options as objects { id, text }
+            const opts = question.options || [];
+            setOption1(opts[0]?.text || '');
+            setOption2(opts[1]?.text || '');
+            setOption3(opts[2]?.text || '');
+            setOption4(opts[3]?.text || '');
         }
 
         setIsModalOpen(true);
     };
 
     const handleDeleteQuestion = async (questionId: number) => {
-        if (!confirm("Are you sure you want to delete this question?")) return;
+        if (!confirm("Czy na pewno chcesz usunąć to pytanie?")) return;
         try {
             await api.delete(`/api/questions/${questionId}/`);
             setQuestions(questions.filter(q => q.id !== questionId));
@@ -324,7 +329,7 @@ export const QuestionBankDetailsPage = () => {
                                                 </div>
                                             ))}
                                         </div>
-                                        <p className="text-xs text-slate-500">Wybierz {isMultipleChoice ? "checkboxe" : "przycisk radio"} obok poprawnej odpowiedzi.</p>
+                                        <p className="text-xs text-slate-500">Wybierz {isMultipleChoice ? "checkboxy" : "przycisk radio"} obok poprawnej odpowiedzi.</p>
                                     </div>
                                 )}
 

@@ -157,7 +157,7 @@ export const CourseManagePage = () => {
 
     const handleDeleteModule = async (moduleId: number) => {
         if (!id) return;
-        if (!confirm('Are you sure you want to delete this module?')) return;
+        if (!confirm('Czy na pewno chcesz usunąć ten moduł?')) return;
         try {
             await api.delete(`/api/courses/${id}/modules/${moduleId}/`);
             setModules(modules.filter(m => m.id !== moduleId));
@@ -167,7 +167,7 @@ export const CourseManagePage = () => {
     };
 
     const handleDeleteQuiz = async (quizId: number) => {
-        if (!confirm('Are you sure you want to delete this quiz?')) return;
+        if (!confirm('Czy na pewno chcesz usunąć ten quiz?')) return;
         try {
             await api.delete(`/api/quizzes/${quizId}/`);
             setQuizzes(quizzes.filter(q => q.id !== quizId));
@@ -189,7 +189,7 @@ export const CourseManagePage = () => {
 
     const handleUnenrollStudent = async (studentId: number) => {
         if (!id) return;
-        if (!confirm('Are you sure you want to unenroll this student?')) return;
+        if (!confirm('Czy na pewno chcesz wypisać tego studenta?')) return;
         try {
             await api.delete(`/api/courses/${id}/unenroll/${studentId}/`);
             const unenrolled = enrolledStudents.find(s => s.student.id === studentId);
