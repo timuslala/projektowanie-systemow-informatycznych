@@ -11,6 +11,8 @@ interface Question {
     type: 'closed' | 'open';
     options?: string[];
     correctOption?: number;
+    correctOptions?: number[]; // 0-based indices
+    isMultipleChoice?: boolean;
     tags?: string; // Comma separated
 }
 
@@ -40,9 +42,11 @@ export const CreateQuestionBankPage = () => {
             const mappedQuestions: Question[] = APIData.map((q: any) => ({
                 id: q.id,
                 text: q.text,
-                type: q.type === 'multiple_choice' ? 'closed' : 'open',
+                type: (q.type === 'multiple_choice' || q.type === 'single_choice') ? 'closed' : 'open',
                 options: q.options ? q.options.map((o: any) => o.text) : [],
                 correctOption: q.correct_option ? q.correct_option - 1 : undefined, // Backend is 1-based
+                correctOptions: q.correct_options ? q.correct_options.map((i: number) => i - 1) : [], // Backend is 1-based
+                isMultipleChoice: q.type === 'multiple_choice',
                 tags: q.tags
             }));
 
@@ -78,6 +82,8 @@ export const CreateQuestionBankPage = () => {
                 type: q.type === 'closed' ? 'closed' : 'open',
                 options: q.options, // string[]
                 correctOption: q.correctOption !== undefined ? q.correctOption : 0,
+                correctOptions: q.correctOptions || [],
+                isMultipleChoice: q.isMultipleChoice,
                 tags: q.tags
             }));
 
@@ -122,9 +128,11 @@ export const CreateQuestionBankPage = () => {
             const newQuestion: Question = {
                 id: qData.id,
                 text: qData.text,
-                type: qData.type === 'multiple_choice' ? 'closed' : 'open',
+                type: (qData.type === 'multiple_choice' || qData.type === 'single_choice') ? 'closed' : 'open',
                 options: qData.options ? qData.options.map((o: any) => o.text) : [],
                 correctOption: qData.correct_option ? qData.correct_option - 1 : undefined,
+                correctOptions: qData.correct_options ? qData.correct_options.map((i: number) => i - 1) : [],
+                isMultipleChoice: qData.type === 'multiple_choice',
                 tags: qData.tags
             };
 

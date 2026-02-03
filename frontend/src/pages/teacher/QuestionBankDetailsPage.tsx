@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, X, Edit2 } from 'lucide-react';
 import api from '../../services/api';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
@@ -8,9 +8,10 @@ import { Card } from '../../components/Card';
 interface Question {
     id: number;
     text: string;
-    type: 'open' | 'closed';
+    type: 'open' | 'single_choice' | 'multiple_choice';
     options?: string[]; // simplified for display
     correctOption?: number;
+    correctOptions?: number[]; // indices
     question_bank: number;
 }
 
@@ -39,6 +40,9 @@ export const QuestionBankDetailsPage = () => {
     const [correctOption, setCorrectOption] = useState(0); // 0-3 index
     const [correctOptionIndices, setCorrectOptionIndices] = useState<number[]>([]);
 
+    // Edit State
+    const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null);
+
     useEffect(() => {
         const fetchData = async () => {
             if (!id) return;
@@ -58,7 +62,7 @@ export const QuestionBankDetailsPage = () => {
         fetchData();
     }, [id]);
 
-    const handleAddQuestion = async () => {
+    const handleSaveQuestion = async () => {
         if (!id) return;
         try {
             const payload: any = {
@@ -74,29 +78,64 @@ export const QuestionBankDetailsPage = () => {
                     payload.correctOptions = correctOptionIndices;
                     payload.correctOption = 0; // Fallback
                 } else {
-                    payload.correctOption = correctOption; // Backend expects 0-based in some views, let's verify. 
+                    payload.correctOption = correctOption;
                 }
-                // Previous analysis of views.py showed it takes correctOption (0-based) and adds 1 for model.
-                // So sending 0-based index is correct.
             }
 
-            // We use the QuestionViewSet which is mapped to /api/questions/ usually, 
-            // but we need to check if we should post to keys
-            // The plan said POST to /api/questions/ with question_bank ID.
+            if (editingQuestionId) {
+                await api.put(`/api/questions/${editingQuestionId}/`, payload);
+                // Update local list
+                setQuestions(questions.map(q => {
+                    if (q.id === editingQuestionId) {
+                        // Careful with merging, best to refetch or manually construct
+                        // Let's refetch to be safe as types/options might have changed
+                        return q;
+                    }
+                    return q;
+                }));
+            } else {
+                await api.post('/api/questions/', payload);
+            }
 
-            await api.post('/api/questions/', payload);
-
-            // Refresh questions or append
-            // The response might be the created question.
-            // Let's refetch to be safe or append if structure matches
             const questionsRes = await api.get(`/api/question_banks/${id}/questions/`);
             setQuestions(questionsRes.data);
 
             closeModal();
         } catch (error) {
-            console.error("Failed to create question", error);
-            alert("Failed to create question");
+            console.error("Failed to save question", error);
+            alert("Failed to save question");
         }
+    };
+
+    const handleEditQuestion = (question: Question) => {
+        setEditingQuestionId(question.id);
+        setNewQuestionText(question.text);
+
+        // Determine type and set state
+        if (question.type === 'open') {
+            setNewQuestionType('open');
+            setIsMultipleChoice(false);
+        } else {
+            setNewQuestionType('closed');
+            if (question.type === 'multiple_choice') {
+                setIsMultipleChoice(true);
+                setCorrectOptionIndices(question.correctOptions || []);
+            } else {
+                setIsMultipleChoice(false);
+                setCorrectOption(question.correctOption !== undefined ? question.correctOption - 1 : 0); // Backend 1-based to Frontend 0-based
+            }
+
+            // Populate options
+            // Since API might return just texts or we need to ensure we have options
+            // The question interface has 'options?: string[]'
+            const opts = question.options || ['', '', '', ''];
+            setOption1(opts[0] || '');
+            setOption2(opts[1] || '');
+            setOption3(opts[2] || '');
+            setOption4(opts[3] || '');
+        }
+
+        setIsModalOpen(true);
     };
 
     const handleDeleteQuestion = async (questionId: number) => {
@@ -121,6 +160,7 @@ export const QuestionBankDetailsPage = () => {
         setOption4('');
         setCorrectOption(0);
         setCorrectOptionIndices([]);
+        setEditingQuestionId(null);
     };
 
     if (loading) return <div className="text-center mt-10 text-slate-500">Wczytuję bank pytań...</div>;
@@ -139,7 +179,7 @@ export const QuestionBankDetailsPage = () => {
             </div>
 
             <div className="flex justify-end">
-                <Button onClick={() => setIsModalOpen(true)} leftIcon={<Plus className="w-4 h-4" />}>
+                <Button onClick={() => { setEditingQuestionId(null); closeModal(); setIsModalOpen(true); }} leftIcon={<Plus className="w-4 h-4" />}>
                     Dodaj pytanie
                 </Button>
             </div>
@@ -156,13 +196,21 @@ export const QuestionBankDetailsPage = () => {
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className={`text-xs px-2 py-0.5 rounded-full ${q.type === 'open' ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                                            {q.type === 'open' ? 'Otwarte' : 'Wielokrotnego wyboru'}
+                                            {q.type === 'open' ? 'Otwarte' : q.type === 'single_choice' ? 'Jednokrotnego wyboru' : 'Wielokrotnego wyboru'}
                                         </span>
                                     </div>
                                     <h3 className="text-lg font-medium text-slate-900">{q.text}</h3>
                                     {/* Show options if closed? The listing endpoint might not return full details depending on serializer. 
                                         Assuming it does or we just show text. */}
                                 </div>
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => handleEditQuestion(q)}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity mr-2"
+                                >
+                                    <Edit2 className="w-4 h-4" />
+                                </Button>
                                 <Button
                                     variant="danger" // Using danger variant which should be Red
                                     size="sm"
@@ -184,7 +232,7 @@ export const QuestionBankDetailsPage = () => {
                         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={closeModal} />
                         <div className="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white border border-slate-200 p-6 shadow-xl transition-all">
                             <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold text-slate-900">Dodaj nowe pytanie</h2>
+                                <h2 className="text-xl font-bold text-slate-900">{editingQuestionId ? 'Edytuj pytanie' : 'Dodaj nowe pytanie'}</h2>
                                 <button onClick={closeModal} className="text-slate-400 hover:text-slate-600">
                                     <X className="w-5 h-5" />
                                 </button>
@@ -282,7 +330,7 @@ export const QuestionBankDetailsPage = () => {
 
                                 <div className="flex justify-end gap-3 pt-4">
                                     <Button variant="ghost" onClick={closeModal}>Anuluj</Button>
-                                    <Button onClick={handleAddQuestion} disabled={!newQuestionText}>Zapisz pytanie</Button>
+                                    <Button onClick={handleSaveQuestion} disabled={!newQuestionText}>{editingQuestionId ? 'Zapisz zmiany' : 'Zapisz pytanie'}</Button>
                                 </div>
                             </div>
                         </div>

@@ -14,7 +14,7 @@ interface Question {
     id: number;
     text: string;
     is_open_ended: boolean;
-    type: 'multiple_choice' | 'open_ended';
+    type: 'single_choice' | 'multiple_choice' | 'open';
     options?: QuestionOption[];
 }
 
@@ -146,7 +146,7 @@ export const TakeQuizPage = () => {
                     <h2 className="text-xl font-medium text-slate-900">{currentQuestion.text}</h2>
 
                     <div className="space-y-3">
-                        {currentQuestion.type === 'multiple_choice' && currentQuestion.options?.map((option) => (
+                        {(currentQuestion.type === 'single_choice' || currentQuestion.type === 'multiple_choice') && currentQuestion.options?.map((option) => (
                             <div
                                 key={option.id}
                                 onClick={() => handleAnswer(option.id)}
@@ -167,7 +167,7 @@ export const TakeQuizPage = () => {
                             </div>
                         ))}
 
-                        {currentQuestion.type === 'open_ended' && (
+                        {currentQuestion.type === 'open' && (
                             <textarea
                                 className="w-full h-32 bg-white border border-slate-200 rounded-lg p-4 text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none resize-none placeholder-slate-400"
                                 placeholder="Type your answer here..."

@@ -89,11 +89,55 @@ class QuestionViewSet(viewsets.ModelViewSet):
             if bank:
                 bank.questions.add(mco)
         else:
-             q = Question.objects.create(
+            q = Question.objects.create(
                 text=text,
                 tags=tags,
                 is_open_ended=True
             )
-             if bank:
-                 bank.questions.add(q)
+            if bank:
+                bank.questions.add(q)
+
+
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        data = self.request.data
+        
+        # Update common fields
+        instance.text = data.get('text', instance.text)
+        instance.tags = data.get('tags', instance.tags)
+        instance.save()
+        
+        # Handle MultipleChoiceOption
+        if hasattr(instance, 'multiplechoiceoption'):
+            mco = instance.multiplechoiceoption
+            
+            # Update options if provided
+            options = data.get('options')
+            if options:
+                opts = (options + [""] * 4)[:4]
+                mco.option1 = opts[0]
+                mco.option2 = opts[1]
+                mco.option3 = opts[2]
+                mco.option4 = opts[3]
+            
+            # Update correct option/s
+            is_multiple_choice = data.get('isMultipleChoice')
+            if is_multiple_choice is not None:
+                 mco.is_multiple_choice = is_multiple_choice
+            
+            # If switching/staying in multiple choice
+            if mco.is_multiple_choice:
+                 correct_options_list = data.get('correctOptions')
+                 if correct_options_list is not None:
+                     mco.correct_options = [i + 1 for i in correct_options_list]
+                 # Default correct_option to 1 as fallback required field
+                 mco.correct_option = 1
+            else:
+                 # Single choice
+                 correct_idx = data.get('correctOption')
+                 if correct_idx is not None:
+                     mco.correct_option = int(correct_idx) + 1
+                 mco.correct_options = []
+            
+            mco.save()
 

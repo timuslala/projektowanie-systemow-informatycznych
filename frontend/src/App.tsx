@@ -16,6 +16,8 @@ import { QuestionBanksPage } from './pages/teacher/QuestionBanksPage';
 import { QuestionBankDetailsPage } from './pages/teacher/QuestionBankDetailsPage';
 import { QuizzesPage } from './pages/teacher/QuizzesPage';
 import { CourseManagePage } from './pages/teacher/CourseManagePage';
+import { QuizSubmissionsPage } from './pages/teacher/QuizSubmissionsPage';
+import { GradeSubmissionPage } from './pages/teacher/GradeSubmissionPage';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -132,11 +134,30 @@ function App() {
             }
           />
 
+
           <Route
             path="/quiz/:id"
             element={
               <ProtectedRoute>
                 <TakeQuizPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/quizzes/:id/submissions"
+            element={
+              <ProtectedRoute>
+                <QuizSubmissionsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/quizzes/:id/submissions/:userId"
+            element={
+              <ProtectedRoute>
+                <GradeSubmissionPage />
               </ProtectedRoute>
             }
           />

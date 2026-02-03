@@ -407,7 +407,7 @@ export const CourseManagePage = () => {
             <div className="max-w-[1400px] min-h-screen mx-auto py-8 animate-fade-in px-4">
                 <div className="flex items-center gap-4 mb-8">
                     <Button variant="ghost" onClick={() => navigate('/dashboard')} leftIcon={<ArrowLeft className="w-4 h-4" />} className="text-slate-500 hover:text-indigo-600">
-                        Back
+                        Powrót
                     </Button>
                     <div>
                         <h1 className="text-3xl font-bold text-slate-900 mb-2">Zarządzaj: {course.title}</h1>
@@ -494,14 +494,26 @@ export const CourseManagePage = () => {
                                                 <h3 className="text-lg font-semibold text-slate-900 group-hover:text-emerald-600 transition-colors">{quiz.title}</h3>
                                                 <p className="text-slate-500 mt-1">{quiz.description}</p>
                                             </div>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="text-red-400 hover:text-red-600 hover:bg-red-50"
-                                                onClick={(e) => { e.stopPropagation(); handleDeleteQuiz(quiz.id); }}
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
+                                            <div className="flex flex-col gap-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-red-400 hover:text-red-600 hover:bg-red-50 self-end"
+                                                    onClick={(e) => { e.stopPropagation(); handleDeleteQuiz(quiz.id); }}
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        navigate(`/quizzes/${quiz.id}/submissions`);
+                                                    }}
+                                                >
+                                                    Oceny / Prace
+                                                </Button>
+                                            </div>
                                         </div>
                                     </Card>
                                 ))

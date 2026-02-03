@@ -11,6 +11,14 @@ interface Module {
     name: string;
     content: string;
     photo_url?: string;
+    completed: boolean;
+}
+
+interface Course {
+    id: number;
+    title: string;
+    description: string;
+    progress: number;
 }
 
 interface Quiz {
@@ -29,18 +37,20 @@ export const CourseDetailsPage = () => {
     const { user } = useAuth();
     const [modules, setModules] = useState<Module[]>([]);
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+    const [course, setCourse] = useState<Course | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [modulesRes, quizzesRes] = await Promise.all([
+                const [modulesRes, quizzesRes, courseRes] = await Promise.all([
                     api.get(`/api/courses/${id}/modules/`),
-                    api.get('/api/quizzes/', { params: { course_id: id } })
+                    api.get('/api/quizzes/', { params: { course_id: id } }),
+                    api.get(`/api/courses/${id}`)
                 ]);
                 setModules(modulesRes.data);
-                // API filter might already filter by course_id but explicit filter is safe
                 setQuizzes(quizzesRes.data);
+                setCourse(courseRes.data);
             } catch (error) {
                 console.error("Failed to load course details", error);
             } finally {
@@ -65,7 +75,22 @@ export const CourseDetailsPage = () => {
                 Powrót do panelu
             </Button>
 
-            <h1 className="text-3xl font-bold text-white mb-8">Zawartość kursu</h1>
+            <h1 className="text-3xl font-bold text-white mb-2">{course?.title || 'Zawartość kursu'}</h1>
+
+            {course && isStudent && (
+                <Card className="border-l-4 border-l-indigo-500">
+                    <div className="flex justify-between items-center mb-2">
+                        <span className="text-slate-900">Twój postęp</span>
+                        <span className="text-indigo-400 font-bold">{course.progress}%</span>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-2.5">
+                        <div
+                            className="bg-indigo-600 h-2.5 rounded-full transition-all duration-500"
+                            style={{ width: `${course.progress}%` }}
+                        ></div>
+                    </div>
+                </Card>
+            )}
 
             <div className="space-y-8">
                 {modules.length === 0 && quizzes.length === 0 ? (
@@ -101,6 +126,33 @@ export const CourseDetailsPage = () => {
                                         <div className="text-slate-600 prose prose-sm max-w-none">
                                             {module.content}
                                         </div>
+                                        {isStudent && (
+                                            <div className="mt-4 flex justify-end">
+                                                <Button
+                                                    size="sm"
+                                                    variant={module.completed ? "secondary" : "primary"}
+                                                    onClick={async () => {
+                                                        if (module.completed) return; // Already done
+                                                        try {
+                                                            await api.post(`/api/courses/${id}/modules/${module.id}/mark_completed/`);
+                                                            // Refresh data to update progress and module status
+                                                            // For simplicity: reload page or refetch. 
+                                                            // Better: local update
+                                                            setModules(prev => prev.map(m => m.id === module.id ? { ...m, completed: true } : m));
+                                                            // Also refetch course for progress
+                                                            const cRes = await api.get(`/api/courses/${id}/`);
+                                                            setCourse(cRes.data);
+                                                        } catch (err) {
+                                                            console.error("Failed to mark completed", err);
+                                                        }
+                                                    }}
+                                                    disabled={module.completed}
+                                                    leftIcon={module.completed ? <CheckCircle className="w-4 h-4" /> : undefined}
+                                                >
+                                                    {module.completed ? "Ukończono" : "Oznacz jako zakończone"}
+                                                </Button>
+                                            </div>
+                                        )}
                                     </Card>
 
                                     {/* Quizzes for this module */}

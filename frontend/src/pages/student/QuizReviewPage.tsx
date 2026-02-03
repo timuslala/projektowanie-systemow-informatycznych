@@ -14,7 +14,7 @@ interface QuestionOption {
 interface Question {
     id: number;
     text: string;
-    type: 'multiple_choice' | 'open_ended';
+    type: 'single_choice' | 'multiple_choice' | 'open';
     options?: QuestionOption[];
     correct_panswer?: string; // For open ended
 }
@@ -92,8 +92,8 @@ export const QuizReviewPage = () => {
                             </h3>
 
                             <div className="space-y-2">
-                                {/* Only show choices if multiple choice */}
-                                {question.type === 'multiple_choice' && (
+                                {/* Only show choices if closed */}
+                                {(question.type === 'single_choice' || question.type === 'multiple_choice') && (
                                     <div className="space-y-2 ml-4">
                                         {question.options?.map(opt => {
                                             const isSelected = response?.selected_option_id === opt.id;
@@ -117,7 +117,7 @@ export const QuizReviewPage = () => {
                                     </div>
                                 )}
 
-                                {question.type === 'open_ended' && (
+                                {question.type === 'open' && (
                                     <div className="ml-4 p-4 bg-slate-50 rounded-lg">
                                         <p className="text-sm text-slate-500 mb-1">Twoja odpowiedź:</p>
                                         <p className="text-slate-900 italic">{response?.text_response || "(Brak odpowiedzi)"}</p>

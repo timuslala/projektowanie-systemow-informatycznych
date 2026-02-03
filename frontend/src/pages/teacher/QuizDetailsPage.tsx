@@ -14,7 +14,7 @@ interface QuestionOption {
 interface Question {
     id: number;
     text: string;
-    type: 'multiple_choice' | 'open_ended';
+    type: 'single_choice' | 'multiple_choice' | 'open';
     is_open_ended: boolean;
     options?: QuestionOption[];
     correct_option?: number; // 1-based index from backend
@@ -57,13 +57,15 @@ export const QuizDetailsPage = () => {
         title: '',
         description: '',
         timeLimit: 30,
-        selectedBanks: [] as number[]
+        selectedBanks: [] as number[],
+        selectedModule: '' as string | number
     });
+    const [modules, setModules] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchQuizData = async () => {
             try {
-                // 1. Fetch Quiz and All Banks (for edit selection)
+                // 1. Fetch Quiz, All Banks, and Course Modules
                 const [quizRes, banksRes] = await Promise.all([
                     api.get(`/api/quizzes/${id}/`),
                     api.get('/api/question_banks/') // Fetch all for the edit modal
@@ -72,13 +74,27 @@ export const QuizDetailsPage = () => {
                 const quizData = quizRes.data;
                 const allBanksData = banksRes.data;
 
+                // Fetch modules for the course of this quiz
+                let modulesData = [];
+                if (quizData.course) {
+                    try {
+                        const modulesRes = await api.get(`/api/courses/${quizData.course}/modules/`);
+                        modulesData = modulesRes.data;
+                    } catch (e) {
+                        console.error("Failed to fetch modules", e);
+                    }
+                }
+
                 setQuiz(quizData);
                 setAllBanks(allBanksData);
+                setModules(modulesData);
+
                 setEditForm({
                     title: quizData.title,
                     description: quizData.description,
                     timeLimit: quizData.time_limit_in_minutes,
-                    selectedBanks: quizData.question_banks || []
+                    selectedBanks: quizData.question_banks || [],
+                    selectedModule: quizData.module || ''
                 });
 
                 // 2. Fetch questions for each bank used in the quiz
@@ -87,11 +103,7 @@ export const QuizDetailsPage = () => {
 
                 await Promise.all(questionBankIds.map(async (bankId: number) => {
                     try {
-                        // Find bank details from the already fetched allBanks logic, or fetch if needed.
-                        // We have allBanksData, so we can just find it.
                         const bank = allBanksData.find((b: QuestionBank) => b.id === bankId);
-
-                        // Fetch questions for this bank
                         const questionsRes = await api.get(`/api/question_banks/${bankId}/questions/`);
 
                         if (bank) {
@@ -124,7 +136,8 @@ export const QuizDetailsPage = () => {
                 title: editForm.title,
                 description: editForm.description,
                 time_limit_in_minutes: editForm.timeLimit,
-                question_banks: editForm.selectedBanks
+                question_banks: editForm.selectedBanks,
+                module: editForm.selectedModule ? Number(editForm.selectedModule) : null
             });
 
             setQuiz(response.data);
@@ -200,6 +213,21 @@ export const QuizDetailsPage = () => {
                                         value={editForm.timeLimit}
                                         onChange={(e) => setEditForm({ ...editForm, timeLimit: parseInt(e.target.value) })}
                                     />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">Przypisz do modułu</label>
+                                    <select
+                                        className="w-full px-4 py-2 bg-white border border-slate-300 rounded-md text-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                                        value={editForm.selectedModule}
+                                        onChange={(e) => setEditForm({ ...editForm, selectedModule: e.target.value })}
+                                    >
+                                        <option value="">-- Brak / Quiz końcowy --</option>
+                                        {modules.map((m: any) => (
+                                            <option key={m.id} value={m.id}>
+                                                {m.name}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-2">Banki pytań</label>
@@ -300,11 +328,11 @@ export const QuizDetailsPage = () => {
                                                 <div className="flex justify-between items-start">
                                                     <p className="font-medium text-slate-900 text-lg">{q.text}</p>
                                                     <span className="text-xs font-medium px-2 py-1 rounded bg-slate-100 text-slate-500 uppercase tracking-wider">
-                                                        {q.type === 'multiple_choice' ? 'Wielokrotnego wyboru' : 'Jednokrotnego wyboru'}
+                                                        {q.type === 'open' ? 'Otwarte' : q.type === 'single_choice' ? 'Jednokrotnego wyboru' : 'Wielokrotnego wyboru'}
                                                     </span>
                                                 </div>
 
-                                                {q.type === 'multiple_choice' && q.options && (
+                                                {(q.type === 'single_choice' || q.type === 'multiple_choice') && q.options && (
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
                                                         {q.options.map((opt, optIdx) => {
                                                             const isCorrect = q.correct_option === optIdx + 1;
@@ -332,7 +360,7 @@ export const QuizDetailsPage = () => {
                                                     </div>
                                                 )}
 
-                                                {q.type === 'open_ended' && (
+                                                {q.type === 'open' && (
                                                     <div className="w-full h-24 bg-slate-50 border border-slate-200 rounded p-4 text-slate-400 italic text-sm">
                                                         Uczeń wpisze swoją odpowiedź tutaj...
                                                     </div>

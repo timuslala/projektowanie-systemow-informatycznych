@@ -13,8 +13,10 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     def get_type(self, obj):
         if hasattr(obj, 'multiplechoiceoption'):
-            return 'multiple_choice'
-        return 'open_ended'
+            if obj.multiplechoiceoption.is_multiple_choice:
+                return 'multiple_choice'
+            return 'single_choice'
+        return 'open'
 
     def get_options(self, obj):
         if hasattr(obj, 'multiplechoiceoption'):
@@ -29,13 +31,19 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 class FullQuestionSerializer(QuestionSerializer):
     correct_option = serializers.SerializerMethodField()
+    correct_options = serializers.SerializerMethodField()
 
     class Meta(QuestionSerializer.Meta):
-        fields = QuestionSerializer.Meta.fields + ['correct_option', 'tags']
+        fields = QuestionSerializer.Meta.fields + ['correct_option', 'correct_options', 'tags']
 
     def get_correct_option(self, obj):
         if hasattr(obj, 'multiplechoiceoption'):
             return obj.multiplechoiceoption.correct_option
+        return None
+
+    def get_correct_options(self, obj):
+        if hasattr(obj, 'multiplechoiceoption'):
+            return obj.multiplechoiceoption.correct_options
         return None
 
 

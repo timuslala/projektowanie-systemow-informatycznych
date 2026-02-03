@@ -90,6 +90,18 @@ export const QuizzesPage = () => {
                                             <span>•</span>
                                             <span>Id kursu: {quiz.course}</span>
                                         </div>
+                                        <div className="mt-4 flex gap-2">
+                                            <Button
+                                                size="sm"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate(`/quizzes/${quiz.id}/submissions`);
+                                                }}
+                                                variant="outline"
+                                            >
+                                                Oceny / Prace
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

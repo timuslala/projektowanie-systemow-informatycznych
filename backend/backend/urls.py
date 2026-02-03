@@ -92,6 +92,11 @@ urlpatterns = [
         name="module-image-by-course",
     ),
     path(
+        "api/courses/<int:course_id>/modules/<int:pk>/mark_completed/",
+        ModuleViewSet.as_view({"post": "mark_completed"}),
+        name="module-mark-completed",
+    ),
+    path(
         "api/courses/",
         CourseViewSet.as_view(
             {
