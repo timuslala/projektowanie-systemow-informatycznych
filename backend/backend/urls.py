@@ -208,6 +208,21 @@ urlpatterns = [
         name="quiz-review",
     ),
     path(
+        "api/quizzes/<int:pk>/submissions/",
+        QuizViewSet.as_view({"get": "submissions"}),
+        name="quiz-submissions",
+    ),
+    path(
+        "api/quizzes/<int:pk>/submissions/<int:user_id>/",
+        QuizViewSet.as_view({"get": "student_submission"}),
+        name="quiz-student-submission",
+    ),
+    path(
+        "api/quizzes/grade_response/<int:response_id>/",
+        QuizViewSet.as_view({"post": "grade_response"}),
+        name="quiz-grade-response",
+    ),
+    path(
         "api/questions/",
         QuestionViewSet.as_view({"get": "list", "post": "create"}),
         name="question-list",

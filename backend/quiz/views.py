@@ -69,40 +69,35 @@ class QuizViewSet(viewsets.ModelViewSet):
         
         user = request.user
         
-        for resp in responses:
-            q_id = resp.get('question_id')
-            val = resp.get('answer')
-            try:
-                question = Question.objects.get(id=q_id) 
-                # Security: verify question belongs to quiz (via banks)
-                
-                if question.is_open_ended:
-                     QuestionResponse.objects.update_or_create(
-                         question=question, user=user,
-                         defaults={'response_text': str(val) if val is not None else ""}
-                     )
+        all_questions = []
+        for bank in quiz.question_banks.all():
+            all_questions.extend(bank.questions.all())
+
+        # Map provided responses by question_id
+        submission_map = {r.get('question_id'): r.get('answer') for r in responses}
+
+        for question in all_questions:
+            val = submission_map.get(question.id)
+            
+            # Determine defaults based on input type and value
+            defaults = {}
+            if question.is_open_ended:
+                defaults['response_text'] = str(val) if val is not None else ""
+            else:
+                 # Check if it's a multiple-select question
+                if isinstance(val, list):
+                    defaults['selected_options'] = val
+                    defaults['selected_option'] = None
                 else:
-                     # Check if it's a multiple-select question (list of inputs)
-                     if isinstance(val, list):
-                         QuestionResponse.objects.update_or_create(
-                             question=question, user=user,
-                             defaults={
-                                 'selected_options': val,
-                                 'selected_option': None # Clear single option if any
-                             }
-                         )
-                     else:
-                         # Single select (legacy or explicit single choice)
-                         QuestionResponse.objects.update_or_create(
-                             question=question, user=user,
-                             defaults={
-                                 'selected_option': int(val) if val is not None else None,
-                                 'selected_options': [] # Clear list options if any
-                             }
-                         )
-            except (Question.DoesNotExist, ValueError):
-                continue
-                
+                    # Single select
+                    defaults['selected_option'] = int(val) if val is not None else None
+                    defaults['selected_options'] = []
+
+            QuestionResponse.objects.update_or_create(
+                question=question, user=user,
+                defaults=defaults
+            )
+
         return Response({'status': 'submitted'}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['get'])
@@ -149,10 +144,18 @@ class QuizViewSet(viewsets.ModelViewSet):
         
         for q in questions:
             # Build Question Data
+            # Determine type matching QuestionSerializer logic
+            q_type = 'open'
+            if hasattr(q, 'multiplechoiceoption'):
+                if q.multiplechoiceoption.is_multiple_choice:
+                    q_type = 'multiple_choice'
+                else:
+                    q_type = 'single_choice'
+
             q_data = {
                 'id': q.id,
                 'text': q.text,
-                'type': 'multiple_choice' if hasattr(q, 'multiplechoiceoption') else 'open_ended',
+                'type': q_type,
             }
             if hasattr(q, 'multiplechoiceoption'):
                  mc = q.multiplechoiceoption
@@ -290,10 +293,18 @@ class QuizViewSet(viewsets.ModelViewSet):
         total_questions = len(questions)
         
         for q in questions:
+            # Determine type matching QuestionSerializer logic
+            q_type = 'open'
+            if hasattr(q, 'multiplechoiceoption'):
+                if q.multiplechoiceoption.is_multiple_choice:
+                    q_type = 'multiple_choice'
+                else:
+                    q_type = 'single_choice'
+
             q_data = {
                 'id': q.id,
                 'text': q.text,
-                'type': 'multiple_choice' if hasattr(q, 'multiplechoiceoption') else 'open_ended',
+                'type': q_type,
             }
             if hasattr(q, 'multiplechoiceoption'):
                  mc = q.multiplechoiceoption
@@ -315,6 +326,11 @@ class QuizViewSet(viewsets.ModelViewSet):
             questions_data.append(q_data)
             
             resp = responses_map.get(q.id)
+            
+            # If response is missing (e.g. skipped or old submission logic), create an empty one so it can be graded
+            if not resp:
+                resp = QuestionResponse.objects.create(question=q, user=target_user)
+
             is_correct = False
             points = 0
             instructor_comment = None
