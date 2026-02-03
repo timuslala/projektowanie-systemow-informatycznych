@@ -26,7 +26,7 @@ from questionresponse.models import QuestionResponse
 class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "name", "surname", "is_teacher", "is_superuser", "is_staff"]
+        fields = ["id", "email", "name", "surname", "is_teacher", "is_superuser", "is_staff"]
 
 
 class CourseProgressSerializer(serializers.ModelSerializer):

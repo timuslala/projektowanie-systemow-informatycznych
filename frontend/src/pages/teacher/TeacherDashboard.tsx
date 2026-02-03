@@ -70,12 +70,6 @@ export const TeacherDashboard = () => {
                                 <h2 className="text-xl font-bold text-slate-900 mb-8">{course.title}</h2>
 
                                 <div className="space-y-6">
-                                    {/* Progress Section - Hidden for teachers or visualized differently? 
-                                        Request implies matching view. Teachers usually don't have personal progress.
-                                        Showing 0% or hiding. Hiding for now to avoid confusion, or showing Stats?
-                                        User said "look something like second image". Image has progress.
-                                        I'll show it but it will likely be 0.
-                                    */}
                                     <div className="space-y-2">
                                         <div className="flex justify-between items-center">
                                             <span className="text-sm font-bold text-slate-900">Postęp kursu</span>

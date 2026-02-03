@@ -68,12 +68,16 @@ export const Navbar = () => {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        {/* User Profile Dropdown Placeholder */}
                         {user && (
                             <div className="hidden md:flex items-center gap-3 pl-4 border-l border-white/10">
                                 <div className="flex flex-col items-end">
                                     <span className="text-sm font-medium">{user.name}</span>
-                                    <span className="text-xs text-[#94a3b8] capitalize">{user.role}</span>
+                                    <span className="text-xs text-[#94a3b8] capitalize">
+                                        {user.role === 'teacher' ? 'Nauczyciel' :
+                                            user.role === 'superuser' ? 'Superuser' :
+                                                user.role === 'staff' ? 'Personel' :
+                                                    user.role === 'student' ? 'Uczeń' : user.role}
+                                    </span>
                                 </div>
                                 <img
                                     src={user.avatarUrl}
@@ -92,7 +96,6 @@ export const Navbar = () => {
                             </div>
                         )}
 
-                        {/* Mobile Menu Button */}
                         <button
                             className="md:hidden p-2 text-[#94a3b8] hover:text-white"
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -104,39 +107,41 @@ export const Navbar = () => {
             </div>
 
             {/* Mobile Menu */}
-            {isMobileMenuOpen && (
-                <div className="md:hidden border-t border-white/5 bg-[#0f172a] p-4 space-y-2 animate-fade-in">
-                    {links.map((link) => (
-                        <Link
-                            key={link.path}
-                            to={link.path}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            className={`
+            {
+                isMobileMenuOpen && (
+                    <div className="md:hidden border-t border-white/5 bg-[#0f172a] p-4 space-y-2 animate-fade-in">
+                        {links.map((link) => (
+                            <Link
+                                key={link.path}
+                                to={link.path}
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className={`
                 flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors
                 ${isActive(link.path)
-                                    ? 'bg-[#6366f1]/10 text-[#6366f1]'
-                                    : 'text-[#94a3b8] hover:bg-white/5 hover:text-white'
-                                }
+                                        ? 'bg-[#6366f1]/10 text-[#6366f1]'
+                                        : 'text-[#94a3b8] hover:bg-white/5 hover:text-white'
+                                    }
               `}
-                        >
-                            {link.icon}
-                            {link.label}
-                        </Link>
-                    ))}
-                    <div className="pt-4 mt-4 border-t border-white/5">
-                        <button
-                            onClick={() => {
-                                logout();
-                                setIsMobileMenuOpen(false);
-                            }}
-                            className="flex w-full items-center gap-3 px-4 py-3 text-[#ef4444] hover:bg-red-500/10 rounded-lg transition-colors"
-                        >
-                            <LogOut className="h-5 w-5" />
-                            Wyloguj się
-                        </button>
+                            >
+                                {link.icon}
+                                {link.label}
+                            </Link>
+                        ))}
+                        <div className="pt-4 mt-4 border-t border-white/5">
+                            <button
+                                onClick={() => {
+                                    logout();
+                                    setIsMobileMenuOpen(false);
+                                }}
+                                className="flex w-full items-center gap-3 px-4 py-3 text-[#ef4444] hover:bg-red-500/10 rounded-lg transition-colors"
+                            >
+                                <LogOut className="h-5 w-5" />
+                                Wyloguj się
+                            </button>
+                        </div>
                     </div>
-                </div>
-            )}
-        </nav>
+                )
+            }
+        </nav >
     );
 };

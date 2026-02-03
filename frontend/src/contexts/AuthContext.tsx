@@ -49,7 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             const user: User = {
                 id: userData.id,
-                email: 'user@example.com', // API doesn't return email in UserInfoView?
+                email: userData.email,
                 name: `${userData.name} ${userData.surname}`,
                 role: getUserRole(userData),
                 avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.name}`

@@ -22,13 +22,22 @@ export const TakeQuizPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [questions, setQuestions] = useState<Question[]>([]);
-    const [answers, setAnswers] = useState<Record<number, string | number>>({});
+    // Update answers state to allow storing arrays for multiple choice
+    const [answers, setAnswers] = useState<Record<number, string | number | number[]>>({});
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
 
-    const [quizDetails, setQuizDetails] = useState<{ show_correct_answers_on_completion: boolean } | null>(null);
+    // Add time_limit_in_minutes to interface
+    const [quizDetails, setQuizDetails] = useState<{
+        show_correct_answers_on_completion: boolean;
+        time_limit_in_minutes: number;
+    } | null>(null);
+
+    // Timer state
+    const [timeLeft, setTimeLeft] = useState<number | null>(null);
+    const [timeExpired, setTimeExpired] = useState(false);
 
     useEffect(() => {
         const fetchQuiz = async () => {
@@ -39,6 +48,11 @@ export const TakeQuizPage = () => {
                 ]);
                 setQuestions(questionsRes.data);
                 setQuizDetails(quizRes.data);
+
+                // Initialize timer
+                if (quizRes.data.time_limit_in_minutes) {
+                    setTimeLeft(quizRes.data.time_limit_in_minutes * 60);
+                }
             } catch (error) {
                 console.error("Failed to load quiz", error);
             } finally {
@@ -48,12 +62,49 @@ export const TakeQuizPage = () => {
         fetchQuiz();
     }, [id]);
 
+    useEffect(() => {
+        if (timeLeft === null || submitted) return;
+
+        if (timeLeft <= 0) {
+            setTimeExpired(true);
+            handleSubmit(true); // Auto submit
+            return;
+        }
+
+        const timerId = setInterval(() => {
+            setTimeLeft(prev => (prev !== null && prev > 0 ? prev - 1 : 0));
+        }, 1000);
+
+        return () => clearInterval(timerId);
+    }, [timeLeft, submitted]);
+
+    const formatTime = (seconds: number) => {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    };
+
     const handleAnswer = (value: string | number) => {
+        if (timeExpired || submitted) return;
+
         const currentQ = questions[currentQuestionIndex];
-        setAnswers(prev => ({
-            ...prev,
-            [currentQ.id]: value
-        }));
+
+        if (currentQ.type === 'multiple_choice') {
+            setAnswers(prev => {
+                const currentAns = (prev[currentQ.id] as number[]) || [];
+                const val = value as number;
+                if (currentAns.includes(val)) {
+                    return { ...prev, [currentQ.id]: currentAns.filter(v => v !== val) };
+                } else {
+                    return { ...prev, [currentQ.id]: [...currentAns, val] };
+                }
+            });
+        } else {
+            setAnswers(prev => ({
+                ...prev,
+                [currentQ.id]: value
+            }));
+        }
     };
 
     const handleNext = () => {
@@ -68,7 +119,9 @@ export const TakeQuizPage = () => {
         }
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (auto = false) => {
+        if (submitting || (submitted && !auto)) return;
+
         setSubmitting(true);
         try {
             const formattedResponses = Object.entries(answers).map(([qId, val]) => ({
@@ -82,32 +135,36 @@ export const TakeQuizPage = () => {
             setSubmitted(true);
         } catch (error) {
             console.error("Failed to submit quiz", error);
-            alert("Failed to submit quiz. Please try again.");
+            if (!auto) alert("Failed to submit quiz. Please try again.");
         } finally {
             setSubmitting(false);
         }
     };
 
-    if (loading) return <div className="text-white text-center mt-10">Loading quiz...</div>;
-    if (questions.length === 0) return <div className="text-white text-center mt-10">No questions in this quiz.</div>;
+    if (loading) return <div className="text-white text-center mt-10">Ładowanie quizu...</div>;
+    if (questions.length === 0) return <div className="text-white text-center mt-10">Brak pytań w tym quizie.</div>;
 
     if (submitted) {
         return (
             <div className="max-w-2xl mx-auto text-center space-y-6 animate-fade-in my-12">
                 <Card>
                     <div className="flex flex-col items-center gap-4 py-8">
-                        <div className="w-16 h-16 rounded-full bg-green-50 text-green-500 flex items-center justify-center">
-                            <CheckCircle className="w-8 h-8" />
+                        <div className={`w-16 h-16 rounded-full flex items-center justify-center ${timeExpired ? 'bg-amber-50 text-amber-500' : 'bg-green-50 text-green-500'}`}>
+                            {timeExpired ? <Clock className="w-8 h-8" /> : <CheckCircle className="w-8 h-8" />}
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-900">Quiz Submitted!</h2>
-                        <p className="text-slate-500">Your answers have been recorded.</p>
+                        <h2 className="text-2xl font-bold text-slate-900">
+                            {timeExpired ? "Czas minął!" : "Quiz zatwierdzony!"}
+                        </h2>
+                        <p className="text-slate-500">
+                            {timeExpired ? "Twój czas na rozwiązanie quizu dobiegł końca. Odpowiedzi zostały zapisane." : "Twoje odpowiedzi zostały zapisane."}
+                        </p>
                         <div className="flex gap-4">
                             <Button onClick={() => navigate('/dashboard')} variant="secondary">
-                                Return to Dashboard
+                                Powrót do panelu
                             </Button>
                             {quizDetails?.show_correct_answers_on_completion && (
                                 <Button onClick={() => navigate(`/quiz/${id}/review`)}>
-                                    Review Answers
+                                    Przejrzyj odpowiedzi
                                 </Button>
                             )}
                         </div>
@@ -124,13 +181,15 @@ export const TakeQuizPage = () => {
         <div className="max-w-3xl mx-auto space-y-8 animate-fade-in my-8">
             <div className="flex items-center justify-between text-slate-900">
                 <div>
-                    <h1 className="text-2xl font-bold">Quiz Session</h1>
-                    <p className="text-slate-500 text-sm">Question {currentQuestionIndex + 1} of {questions.length}</p>
+                    <h1 className="text-2xl font-bold">Sesja quizowa</h1>
+                    <p className="text-slate-500 text-sm">Pytanie {currentQuestionIndex + 1} z {questions.length}</p>
                 </div>
-                <div className="flex items-center gap-2 text-amber-500">
-                    <Clock className="w-5 h-5" />
-                    <span className="font-mono">Time Remaining: --:--</span>
-                </div>
+                {timeLeft !== null && (
+                    <div className={`flex items-center gap-2 ${timeLeft < 60 ? 'text-red-500 animate-pulse' : 'text-amber-500'}`}>
+                        <Clock className="w-5 h-5" />
+                        <span className="font-mono">Pozostały czas: {formatTime(timeLeft)}</span>
+                    </div>
+                )}
             </div>
 
             {/* Progress Bar */}
@@ -143,36 +202,51 @@ export const TakeQuizPage = () => {
 
             <Card className="min-h-[400px] flex flex-col">
                 <div className="flex-1 space-y-6">
-                    <h2 className="text-xl font-medium text-slate-900">{currentQuestion.text}</h2>
+                    <h2 className="text-xl font-medium text-slate-900">
+                        {currentQuestion.text}
+                        {currentQuestion.type === 'multiple_choice' && <span className="ml-2 text-sm text-slate-400 font-normal">(Wybierz wszystkie poprawne)</span>}
+                    </h2>
 
                     <div className="space-y-3">
-                        {(currentQuestion.type === 'single_choice' || currentQuestion.type === 'multiple_choice') && currentQuestion.options?.map((option) => (
-                            <div
-                                key={option.id}
-                                onClick={() => handleAnswer(option.id)}
-                                className={`
-                                    p-4 rounded-lg border cursor-pointer transition-all flex items-center
-                                    ${answers[currentQuestion.id] === option.id
-                                        ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                                        : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300 hover:bg-slate-50'}
-                                `}
-                            >
-                                <div className={`
-                                    w-5 h-5 rounded-full border mr-3 flex items-center justify-center
-                                    ${answers[currentQuestion.id] === option.id ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300'}
-                                `}>
-                                    {answers[currentQuestion.id] === option.id && <div className="w-2 h-2 rounded-full bg-white" />}
+                        {(currentQuestion.type === 'single_choice' || currentQuestion.type === 'multiple_choice') && currentQuestion.options?.map((option) => {
+                            const isSelected = currentQuestion.type === 'multiple_choice'
+                                ? (answers[currentQuestion.id] as number[])?.includes(option.id)
+                                : answers[currentQuestion.id] === option.id;
+
+                            return (
+                                <div
+                                    key={option.id}
+                                    onClick={() => handleAnswer(option.id)}
+                                    className={`
+                                        p-4 rounded-lg border cursor-pointer transition-all flex items-center
+                                        ${isSelected
+                                            ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                                            : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300 hover:bg-slate-50'}
+                                    `}
+                                >
+                                    <div className={`
+                                        w-5 h-5 border mr-3 flex items-center justify-center
+                                        ${currentQuestion.type === 'multiple_choice' ? 'rounded-md' : 'rounded-full'}
+                                        ${isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300'}
+                                    `}>
+                                        {isSelected && (
+                                            currentQuestion.type === 'multiple_choice'
+                                                ? <CheckCircle className="w-3 h-3 text-white" />
+                                                : <div className="w-2 h-2 rounded-full bg-white" />
+                                        )}
+                                    </div>
+                                    {option.text}
                                 </div>
-                                {option.text}
-                            </div>
-                        ))}
+                            );
+                        })}
 
                         {currentQuestion.type === 'open' && (
                             <textarea
                                 className="w-full h-32 bg-white border border-slate-200 rounded-lg p-4 text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none resize-none placeholder-slate-400"
-                                placeholder="Type your answer here..."
+                                placeholder="Wpisz swoją odpowiedź..."
                                 value={answers[currentQuestion.id] as string || ''}
                                 onChange={(e) => handleAnswer(e.target.value)}
+                                disabled={timeExpired || submitted}
                             />
                         )}
                     </div>
@@ -184,16 +258,16 @@ export const TakeQuizPage = () => {
                         onClick={handlePrev}
                         disabled={currentQuestionIndex === 0}
                     >
-                        Previous
+                        Poprzednie pytanie
                     </Button>
 
                     {currentQuestionIndex === questions.length - 1 ? (
-                        <Button onClick={handleSubmit} isLoading={submitting} className="bg-green-600 hover:bg-green-700">
-                            Submit Quiz
+                        <Button onClick={() => handleSubmit(false)} isLoading={submitting} disabled={timeExpired} className="bg-green-600 hover:bg-green-700">
+                            Zatwierdź quiz
                         </Button>
                     ) : (
                         <Button onClick={handleNext}>
-                            Next Question
+                            Następne pytanie
                         </Button>
                     )}
                 </div>

@@ -100,13 +100,19 @@ export const CreateQuestionBankPage = () => {
     };
 
     const handleAddQuestionToBank = (question: Question) => {
-        setBankQuestions([...bankQuestions, question]);
-        setAvailableQuestions(availableQuestions.filter(q => q.id !== question.id));
+        setBankQuestions(prev => {
+            if (prev.some(q => q.id === question.id)) return prev;
+            return [...prev, question];
+        });
+        setAvailableQuestions(prev => prev.filter(q => q.id !== question.id));
     };
 
     const handleRemoveQuestionFromBank = (question: Question) => {
-        setAvailableQuestions([...availableQuestions, question]);
-        setBankQuestions(bankQuestions.filter(q => q.id !== question.id));
+        setAvailableQuestions(prev => {
+            if (prev.some(q => q.id === question.id)) return prev;
+            return [...prev, question];
+        });
+        setBankQuestions(prev => prev.filter(q => q.id !== question.id));
     };
 
     const handleCreateNewQuestion = async () => {
@@ -138,7 +144,7 @@ export const CreateQuestionBankPage = () => {
 
             // Add to bank list (which means it will be copied into the bank upon save, 
             // or we could consider it "claimed" if we updated the logic, but copy is fine)
-            setBankQuestions([...bankQuestions, newQuestion]);
+            setBankQuestions(prev => [...prev, newQuestion]);
             closeModal();
         } catch (error) {
             console.error("Failed to create question", error);

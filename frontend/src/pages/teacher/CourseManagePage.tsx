@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { Plus, ArrowLeft, BookOpen, Clock, Trash2, Users, UserPlus, UserMinus, Search } from 'lucide-react';
@@ -46,6 +47,7 @@ interface CourseProgress {
 export const CourseManagePage = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [course, setCourse] = useState<Course | null>(null);
     const [modules, setModules] = useState<Module[]>([]);
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -230,9 +232,10 @@ export const CourseManagePage = () => {
     };
 
     const filteredEligibleStudents = eligibleStudents.filter(student =>
-    (student.name?.toLowerCase().includes(studentSearch.toLowerCase()) ||
-        student.surname?.toLowerCase().includes(studentSearch.toLowerCase()) ||
-        student.email?.toLowerCase().includes(studentSearch.toLowerCase()))
+        student.email !== user?.email &&
+        (student.name?.toLowerCase().includes(studentSearch.toLowerCase()) ||
+            student.surname?.toLowerCase().includes(studentSearch.toLowerCase()) ||
+            student.email?.toLowerCase().includes(studentSearch.toLowerCase()))
     );
 
     if (loading) return <div className="text-center text-slate-500 mt-10">Ładowanie zarządzania kursu...</div>;
@@ -595,7 +598,7 @@ export const CourseManagePage = () => {
                                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                                     <input
                                         className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-md text-slate-900 focus:border-indigo-500 outline-none"
-                                        placeholder="Wyszukaj uczniów po emailu lub imieniu i nazwisku..."
+                                        placeholder="Wyszukaj uczniów..."
                                         value={studentSearch}
                                         onChange={(e) => setStudentSearch(e.target.value)}
                                     />

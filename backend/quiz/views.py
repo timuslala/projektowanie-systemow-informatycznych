@@ -65,7 +65,7 @@ class QuizViewSet(viewsets.ModelViewSet):
     def submit(self, request, pk=None):
         quiz = self.get_object()
         responses = request.data.get('responses', [])
-        # responses: list of {question_id: int, answer: string/int}
+        # responses: list of {question_id: int, answer: string/int/list[int]}
         
         user = request.user
         
@@ -75,22 +75,31 @@ class QuizViewSet(viewsets.ModelViewSet):
             try:
                 question = Question.objects.get(id=q_id) 
                 # Security: verify question belongs to quiz (via banks)
-                # omitting for brevity but recommended
-                
-                # Check if response already exists to avoid duplicates (optional, or update)
-                # For now, let's update if exists or create
                 
                 if question.is_open_ended:
                      QuestionResponse.objects.update_or_create(
                          question=question, user=user,
-                         defaults={'response_text': str(val)}
+                         defaults={'response_text': str(val) if val is not None else ""}
                      )
                 else:
-                     # Multiple choice
-                     QuestionResponse.objects.update_or_create(
-                         question=question, user=user,
-                         defaults={'selected_option': int(val) if val else None}
-                     )
+                     # Check if it's a multiple-select question (list of inputs)
+                     if isinstance(val, list):
+                         QuestionResponse.objects.update_or_create(
+                             question=question, user=user,
+                             defaults={
+                                 'selected_options': val,
+                                 'selected_option': None # Clear single option if any
+                             }
+                         )
+                     else:
+                         # Single select (legacy or explicit single choice)
+                         QuestionResponse.objects.update_or_create(
+                             question=question, user=user,
+                             defaults={
+                                 'selected_option': int(val) if val is not None else None,
+                                 'selected_options': [] # Clear list options if any
+                             }
+                         )
             except (Question.DoesNotExist, ValueError):
                 continue
                 
@@ -147,11 +156,17 @@ class QuizViewSet(viewsets.ModelViewSet):
             }
             if hasattr(q, 'multiplechoiceoption'):
                  mc = q.multiplechoiceoption
+                 is_mc = mc.is_multiple_choice
+                 def check_correct(idx):
+                     if is_mc and mc.correct_options:
+                         return idx in mc.correct_options
+                     return mc.correct_option == idx
+
                  q_data['options'] = [
-                    {'id': 1, 'text': mc.option1, 'is_correct': mc.correct_option == 1},
-                    {'id': 2, 'text': mc.option2, 'is_correct': mc.correct_option == 2},
-                    {'id': 3, 'text': mc.option3, 'is_correct': mc.correct_option == 3},
-                    {'id': 4, 'text': mc.option4, 'is_correct': mc.correct_option == 4},
+                    {'id': 1, 'text': mc.option1, 'is_correct': check_correct(1)},
+                    {'id': 2, 'text': mc.option2, 'is_correct': check_correct(2)},
+                    {'id': 3, 'text': mc.option3, 'is_correct': check_correct(3)},
+                    {'id': 4, 'text': mc.option4, 'is_correct': check_correct(4)},
                  ]
             else:
                 # Open ended - might not have "correct answer" easily checkable automatically without more fields
@@ -165,12 +180,43 @@ class QuizViewSet(viewsets.ModelViewSet):
             is_correct = False
             if resp:
                 if hasattr(q, 'multiplechoiceoption'):
-                    is_correct = (resp.selected_option == q.multiplechoiceoption.correct_option)
+                    if q.multiplechoiceoption.is_multiple_choice:
+                        # Compare sets of indices
+                        user_selected = set(resp.selected_options) if resp.selected_options else set()
+                        correct_selected = set(q.multiplechoiceoption.correct_options) if q.multiplechoiceoption.correct_options else set()
+                        is_correct = (user_selected == correct_selected)
+                    else:
+                        is_correct = (resp.selected_option == q.multiplechoiceoption.correct_option)
                 else:
                     # Logic for open ended? For now always false or manual
                     pass
                 
-
+                # Basic auto-grading if points not set manually
+                points = resp.points
+                if points == 0 and is_correct:
+                    points = 1
+                
+                score += points
+                
+                user_responses_data.append({
+                    'response_id': resp.id,
+                    'question_id': q.id,
+                    'selected_option_id': resp.selected_option,
+                    'selected_options': resp.selected_options,
+                    'text_response': resp.response_text,
+                    'is_correct': is_correct,
+                    'points': points,
+                    'instructor_comment': resp.instructor_comment
+                })
+        
+        return Response({
+            'quiz_title': quiz.title,
+            'student_name': f"{user.name} {user.surname}",
+            'score': score,
+            'total_questions': total_questions,
+            'questions': questions_data,
+            'responses': user_responses_data
+        })
     @action(detail=True, methods=['get'])
     def submissions(self, request, pk=None):
         """
@@ -251,11 +297,17 @@ class QuizViewSet(viewsets.ModelViewSet):
             }
             if hasattr(q, 'multiplechoiceoption'):
                  mc = q.multiplechoiceoption
+                 is_mc = mc.is_multiple_choice
+                 def check_correct(idx):
+                     if is_mc and mc.correct_options:
+                         return idx in mc.correct_options
+                     return mc.correct_option == idx
+
                  q_data['options'] = [
-                    {'id': 1, 'text': mc.option1, 'is_correct': mc.correct_option == 1},
-                    {'id': 2, 'text': mc.option2, 'is_correct': mc.correct_option == 2},
-                    {'id': 3, 'text': mc.option3, 'is_correct': mc.correct_option == 3},
-                    {'id': 4, 'text': mc.option4, 'is_correct': mc.correct_option == 4},
+                    {'id': 1, 'text': mc.option1, 'is_correct': check_correct(1)},
+                    {'id': 2, 'text': mc.option2, 'is_correct': check_correct(2)},
+                    {'id': 3, 'text': mc.option3, 'is_correct': check_correct(3)},
+                    {'id': 4, 'text': mc.option4, 'is_correct': check_correct(4)},
                  ]
             else:
                 q_data['correct_answer'] = "Open ended question" 
@@ -273,7 +325,12 @@ class QuizViewSet(viewsets.ModelViewSet):
                 instructor_comment = resp.instructor_comment
                 
                 if hasattr(q, 'multiplechoiceoption'):
-                    is_correct_calc = (resp.selected_option == q.multiplechoiceoption.correct_option)
+                    if q.multiplechoiceoption.is_multiple_choice:
+                        user_selected = set(resp.selected_options) if resp.selected_options else set()
+                        correct_selected = set(q.multiplechoiceoption.correct_options) if q.multiplechoiceoption.correct_options else set()
+                        is_correct_calc = (user_selected == correct_selected)
+                    else:
+                        is_correct_calc = (resp.selected_option == q.multiplechoiceoption.correct_option)
                     # If points are 0 and it's correct, maybe we should auto-calc visual "is_correct" flag?
                     # The teacher can override points.
                     is_correct = is_correct_calc
@@ -284,6 +341,7 @@ class QuizViewSet(viewsets.ModelViewSet):
                     'response_id': resp.id, # Needed for grading
                     'question_id': q.id,
                     'selected_option_id': resp.selected_option,
+                    'selected_options': resp.selected_options, # Add this for frontend
                     'text_response': resp.response_text,
                     'is_correct': is_correct,
                     'points': points,
