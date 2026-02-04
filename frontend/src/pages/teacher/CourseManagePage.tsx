@@ -120,9 +120,7 @@ export const CourseManagePage = () => {
                 const formData = new FormData();
                 formData.append('image', newModuleImage);
                 try {
-                    const imageRes = await api.post(`/api/courses/${id}/modules/${createdModule.id}/image/`, formData, {
-                        headers: { 'Content-Type': 'multipart/form-data' }
-                    });
+                    const imageRes = await api.post(`/api/courses/${id}/modules/${createdModule.id}/image/`, formData);
                     createdModule = { ...createdModule, photo_url: imageRes.data.photo_url };
                 } catch (imageError) {
                     console.error("Failed to upload image", imageError);
