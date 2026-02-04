@@ -35,10 +35,10 @@ class Module(models.Model):
             Bucket=settings.AWS_STORAGE_BUCKET_NAME,
             Key=key,
         )
-        if settings.PRODUCTION:
-            self.photo_url = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_REGION}.amazonaws.com/{key}"
-        else:
-            self.photo_url = f"{settings.AWS_S3_PUBLIC_URL}/{settings.AWS_STORAGE_BUCKET_NAME}/{key}"
+        #if settings.PRODUCTION:
+        self.photo_url = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_REGION}.amazonaws.com/{settings.AWS_STORAGE_BUCKET_NAME}/{key}"
+        #else:
+        #    self.photo_url = f"{settings.AWS_S3_PUBLIC_URL}/{settings.AWS_STORAGE_BUCKET_NAME}/{key}"
         self.save()
 
 

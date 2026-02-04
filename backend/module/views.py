@@ -105,15 +105,15 @@ class ModuleImageView(APIView):
         responses={200: "Image uploaded"},
     )
     def post(self, request, course_id, module_id):
-        try:
-            fileobj = request.FILES["image"]
-            if not fileobj.name.lower().endswith((".png", ".jpg", ".jpeg")):
-                return Response(
-                    {"status": "Only PNG, JPG, JPEG images are allowed"}, status=400
-                )
-            module = Module.objects.get(id=module_id, course__id=course_id)
-            module.upload_photo(fileobj)
-            return Response({"status": "image uploaded", "photo_url": module.photo_url})
-        except Exception as e:
-            print(f"Error uploading image: {e}")
-            return Response({"status": f"error uploading image: {str(e)}"}, status=400)
+        #try:
+        fileobj = request.FILES["image"]
+        if not fileobj.name.lower().endswith((".png", ".jpg", ".jpeg")):
+            return Response(
+                {"status": "Only PNG, JPG, JPEG images are allowed"}, status=400
+            )
+        module = Module.objects.get(id=module_id, course__id=course_id)
+        module.upload_photo(fileobj)
+        return Response({"status": "image uploaded", "photo_url": module.photo_url})
+        #except Exception as e:
+        #    print(f"Error uploading image: {e}")
+        #    return Response({"status": f"error uploading image: {str(e)}"}, status=400)
