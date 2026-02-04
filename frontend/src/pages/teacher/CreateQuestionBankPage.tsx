@@ -133,13 +133,13 @@ export const CreateQuestionBankPage = () => {
 
             const newQuestion: Question = {
                 id: qData.id,
-                text: qData.text,
-                type: (qData.type === 'multiple_choice' || qData.type === 'single_choice') ? 'closed' : 'open',
-                options: qData.options ? qData.options.map((o: any) => o.text) : [],
-                correctOption: qData.correct_option ? qData.correct_option - 1 : undefined,
-                correctOptions: qData.correct_options ? qData.correct_options.map((i: number) => i - 1) : [],
-                isMultipleChoice: qData.type === 'multiple_choice',
-                tags: qData.tags
+                text: newQuestionText,
+                type: isOpenEnded ? 'open' : 'closed',
+                options: isOpenEnded ? [] : options,
+                correctOption: isOpenEnded ? undefined : correctOptionIndex,
+                correctOptions: isOpenEnded ? [] : correctOptionIndices,
+                isMultipleChoice: !isOpenEnded && isMultipleChoice,
+                tags: newQuestionTags
             };
 
             // Add to bank list (which means it will be copied into the bank upon save, 

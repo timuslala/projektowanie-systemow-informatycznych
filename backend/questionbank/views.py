@@ -39,29 +39,41 @@ class QuestionBankSerializer(ModelSerializer):
         question_bank = QuestionBank.objects.create(**validated_data)
 
         for q_data in questions_data:
-            q_type = q_data.get("type")
+            q_type = q_data.get("type", "open")
             text = q_data.get("text")
+            tags = q_data.get("tags", "")
 
-            if q_type == "open":
-                q = Question.objects.create(
-                    text=text, is_open_ended=True
-                )
-                question_bank.questions.add(q)
-            elif q_type == "closed":
+            if q_type == "closed" or q_type == "multiple_choice":
                 options = q_data.get("options", [])
-                correct_option_idx = q_data.get("correctOption", 0)  # 0-based index
-                opts = (options + ["]"] * 4)[:4]
+                is_multiple_choice = q_data.get("isMultipleChoice", False)
+                
+                # Ensure 4 options
+                opts = (options + [""] * 4)[:4]
+                
+                # Frontend sends 0-based indices
+                correct_idx = q_data.get("correctOption", 0)
+                correct_options_list = q_data.get("correctOptions", [])  # List of 0-based indices
 
                 mco = MultipleChoiceOption.objects.create(
                     text=text,
+                    tags=tags,
                     is_open_ended=False,
                     option1=opts[0],
                     option2=opts[1],
                     option3=opts[2],
                     option4=opts[3],
-                    correct_option=correct_option_idx + 1,  # Model uses 1-based
+                    correct_option=(int(correct_idx) + 1) if not is_multiple_choice else 1,
+                    is_multiple_choice=is_multiple_choice,
+                    correct_options=[i + 1 for i in correct_options_list] if is_multiple_choice else []
                 )
                 question_bank.questions.add(mco)
+            else:
+                q = Question.objects.create(
+                    text=text,
+                    tags=tags,
+                    is_open_ended=True
+                )
+                question_bank.questions.add(q)
 
         return question_bank
 
