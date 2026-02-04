@@ -32,7 +32,7 @@ AWS_SECRET_ACCESS_KEY = getenv("AWS_SECRET_ACCESS_KEY", "test")
 AWS_REGION = getenv("AWS_REGION", "us-east-1")
 AWS_STORAGE_BUCKET_NAME = getenv("AWS_STORAGE_BUCKET_NAME", "local-bucket")
 # Only LocalStack needs this; harmless in AWS if unset
-AWS_S3_ENDPOINT_URL = getenv("AWS_S3_ENDPOINT_URL", "http://localhost:4566")
+AWS_S3_ENDPOINT_URL = getenv("AWS_S3_ENDPOINT_URL", f"https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com")
 # Public URL for browser access (e.g. http://localhost:4566)
 AWS_S3_PUBLIC_URL = getenv("AWS_S3_PUBLIC_URL", AWS_S3_ENDPOINT_URL)
 ALLOWED_HOSTS = ["*"]

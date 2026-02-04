@@ -24,7 +24,7 @@ from rest_framework_simplejwt.views import (
     TokenBlacklistView,
     TokenRefreshView,
 )
-
+from django.http import HttpResponse
 from course.views import CourseViewSet, UserInfoView
 from module.views import ModuleImageView, ModuleViewSet
 from questionbank.views import QuestionBankViewSet
@@ -45,7 +45,10 @@ schema_view = get_schema_view(
     permission_classes=[permissions.AllowAny],
     authentication_classes=[],
 )
+def health(request):
+    return HttpResponse("ok")
 urlpatterns = [
+    path("health/", health ),
     path("admin/", admin.site.urls),
     path(
         "accounts/token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"
@@ -206,6 +209,21 @@ urlpatterns = [
         "api/quizzes/<int:pk>/review/",
         QuizViewSet.as_view({"get": "review"}),
         name="quiz-review",
+    ),
+    path(
+        "api/quizzes/<int:pk>/submissions/",
+        QuizViewSet.as_view({"get": "submissions"}),
+        name="quiz-submissions",
+    ),
+    path(
+        "api/quizzes/<int:pk>/submissions/<int:user_id>/",
+        QuizViewSet.as_view({"get": "student_submission"}),
+        name="quiz-student-submission",
+    ),
+    path(
+        "api/quizzes/grade_response/<int:response_id>/",
+        QuizViewSet.as_view({"post": "grade_response"}),
+        name="quiz-grade-response",
     ),
     path(
         "api/questions/",

@@ -24,6 +24,7 @@ interface UserResponse {
     selected_option_id?: number;
     text_response?: string;
     is_correct: boolean;
+    instructor_comment?: string;
 }
 
 interface QuizResult {
@@ -125,6 +126,13 @@ export const QuizReviewPage = () => {
                                     </div>
                                 )}
                             </div>
+
+                            {response?.instructor_comment && (
+                                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                                    <p className="text-sm font-semibold text-blue-800 mb-1">Komentarz nauczyciela:</p>
+                                    <p className="text-blue-900">{response.instructor_comment}</p>
+                                </div>
+                            )}
                         </Card>
                     );
                 })}
