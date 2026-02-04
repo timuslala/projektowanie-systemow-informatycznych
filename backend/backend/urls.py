@@ -24,10 +24,12 @@ from rest_framework_simplejwt.views import (
     TokenBlacklistView,
     TokenRefreshView,
 )
-
+from django.http import HttpResponse
 from course.views import CourseViewSet, UserInfoView
 from module.views import ModuleImageView, ModuleViewSet
 from questionbank.views import QuestionBankViewSet
+from quiz.views import QuizViewSet
+from question.views import QuestionViewSet
 from user.views import CustomTokenObtainPairView, EmailValidationView, RegisterView
 
 schema_view = get_schema_view(
@@ -43,7 +45,10 @@ schema_view = get_schema_view(
     permission_classes=[permissions.AllowAny],
     authentication_classes=[],
 )
+def health(request):
+    return HttpResponse("ok")
 urlpatterns = [
+    path("health/", health ),
     path("admin/", admin.site.urls),
     path(
         "accounts/token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"
@@ -88,6 +93,11 @@ urlpatterns = [
         "api/courses/<int:course_id>/modules/<int:module_id>/image/",
         ModuleImageView.as_view(),
         name="module-image-by-course",
+    ),
+    path(
+        "api/courses/<int:course_id>/modules/<int:pk>/mark_completed/",
+        ModuleViewSet.as_view({"post": "mark_completed"}),
+        name="module-mark-completed",
     ),
     path(
         "api/courses/",
@@ -164,8 +174,72 @@ urlpatterns = [
         name="question-banks-detail",
     ),
     path(
+        "api/quizzes/",
+        QuizViewSet.as_view({"get": "list", "post": "create"}),
+        name="quiz-list",
+    ),
+    path(
+        "api/quizzes/<int:pk>/",
+        QuizViewSet.as_view(
+            {
+                "get": "retrieve",
+                "put": "update",
+                "patch": "partial_update",
+                "delete": "destroy",
+            }
+        ),
+        name="quiz-detail",
+    ),
+    path(
         "api/question_banks/<int:question_bank_id>/questions/",
         QuestionBankViewSet.as_view({"get": "questions"}),
-        name="question-banks-detail-with-questions",
+        name="question-banks-questions",
+    ),
+    path(
+        "api/quizzes/<int:pk>/questions/",
+        QuizViewSet.as_view({"get": "questions"}),
+        name="quiz-questions",
+    ),
+    path(
+        "api/quizzes/<int:pk>/submit/",
+        QuizViewSet.as_view({"post": "submit"}),
+        name="quiz-submit",
+    ),
+    path(
+        "api/quizzes/<int:pk>/review/",
+        QuizViewSet.as_view({"get": "review"}),
+        name="quiz-review",
+    ),
+    path(
+        "api/quizzes/<int:pk>/submissions/",
+        QuizViewSet.as_view({"get": "submissions"}),
+        name="quiz-submissions",
+    ),
+    path(
+        "api/quizzes/<int:pk>/submissions/<int:user_id>/",
+        QuizViewSet.as_view({"get": "student_submission"}),
+        name="quiz-student-submission",
+    ),
+    path(
+        "api/quizzes/grade_response/<int:response_id>/",
+        QuizViewSet.as_view({"post": "grade_response"}),
+        name="quiz-grade-response",
+    ),
+    path(
+        "api/questions/",
+        QuestionViewSet.as_view({"get": "list", "post": "create"}),
+        name="question-list",
+    ),
+    path(
+        "api/questions/<int:pk>/",
+        QuestionViewSet.as_view(
+            {
+                "get": "retrieve",
+                "put": "update",
+                "patch": "partial_update",
+                "delete": "destroy",
+            }
+        ),
+        name="question-detail",
     ),
 ]

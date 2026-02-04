@@ -10,3 +10,4 @@ class Quiz(models.Model):
     show_correct_answers_on_completion = models.BooleanField(default=False)
     question_banks = models.ManyToManyField("questionbank.QuestionBank")
     course = models.ForeignKey("course.Course", on_delete=models.CASCADE)
+    module = models.ForeignKey("module.Module", on_delete=models.SET_NULL, null=True, blank=True)

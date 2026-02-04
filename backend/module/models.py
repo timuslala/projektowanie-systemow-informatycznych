@@ -17,26 +17,39 @@ class Module(models.Model):
     photo_url = models.URLField(null=True, blank=True)
 
     def upload_photo(self, fileobj):
+        import os
+        name = getattr(fileobj, "name", "")
+        _, ext = os.path.splitext(name)
+        ext = ext.lower()
+        if ext not in [".png", ".jpg", ".jpeg"]:
+            ext = ".png"
+
         if self.photo_id is None:
             self.photo_id = secrets.token_hex(32)
             """To reach a collision probability of ~50%, ~2^128 calls are needed.
             With a billion stored files, the probability is roughly ~10^-59."""
+        
+        key = f"{self.photo_id}{ext}"
         s3_client.upload_fileobj(
             Fileobj=fileobj,
             Bucket=settings.AWS_STORAGE_BUCKET_NAME,
-            Key=f"{self.photo_id}.png",
+            Key=key,
         )
         if settings.PRODUCTION:
-            self.photo_url = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_REGION}.amazonaws.com/{self.photo_id}.png"
+            self.photo_url = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_REGION}.amazonaws.com/{key}"
         else:
-            self.photo_url = f"{settings.AWS_S3_ENDPOINT_URL}/{settings.AWS_STORAGE_BUCKET_NAME}/{self.photo_id}.png"
+            self.photo_url = f"{settings.AWS_S3_PUBLIC_URL}/{settings.AWS_STORAGE_BUCKET_NAME}/{key}"
         self.save()
 
 
 @receiver(pre_delete, sender=Module)
 def pre_delete_module(sender, instance, **kwargs):
+    key = f"{instance.photo_id}.png"
+    if instance.photo_url:
+        key = instance.photo_url.split("/")[-1]
+    
     s3_client.delete_object(
-        Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=f"{instance.photo_id}.png"
+        Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=key
     )
 
 

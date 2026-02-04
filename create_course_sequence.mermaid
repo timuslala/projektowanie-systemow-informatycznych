@@ -1,0 +1,34 @@
+sequenceDiagram
+    participant FE as Interfejs (Frontend)
+    box "Backend" #e6f7ff
+        participant CVS as backend/course/views.py:CourseViewSet
+        participant CS as backend/course/views.py:CourseSerializer
+        participant CP as backend/course/permissions.py
+    end
+    participant DB as Baza Danych
+
+    Note over FE, CVS: Użytkownik przesyła formularz utworzenia kursu
+    FE->>CVS: POST /api/courses/ (tytuł, opis)
+    activate CVS
+
+    Note over CVS, CP: Weryfikacja uprawnień (check_permissions)
+    CVS->>CP: has_permission()
+    Note right of CP: IsCourseStudentReadOnly | IsCourseInstructor | IsAdminUser
+    activate CP
+    CP-->>CVS: True
+    deactivate CP
+
+    Note over CVS, CS: Metoda perform_create() - przypisanie instruktora
+    CVS->>CS: save(instructor=request.user)
+    activate CS
+    
+    CS->>DB: INSERT INTO course_course ...
+    activate DB
+    DB-->>CS: Potwierdzenie zapisu, ID rekordu
+    deactivate DB
+    
+    CS-->>CVS: Zapisana instancja Course
+    deactivate CS
+
+    CVS-->>FE: HTTP 201 Created (JSON z danymi kursu)
+    deactivate CVS

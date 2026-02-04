@@ -12,10 +12,8 @@ class Question(models.Model):
     ]
 
     text = models.TextField()
-    question_bank = models.ForeignKey(
-        "questionbank.QuestionBank", on_delete=models.CASCADE
-    )
-    question_type = models.CharField(max_length=10, choices=QUESTION_TYPES)
+    is_open_ended = models.BooleanField(default=False)
+    tags = models.TextField(blank=True, help_text="Comma-separated tags")
 
 
 class MultipleChoiceOption(models.Model):
@@ -28,4 +26,8 @@ class MultipleChoiceOption(models.Model):
     option4 = models.CharField(max_length=255)
     correct_option = models.IntegerField(
         choices=[(1, "Option 1"), (2, "Option 2"), (3, "Option 3"), (4, "Option 4")]
+    )
+    is_multiple_choice = models.BooleanField(default=False)
+    correct_options = models.JSONField(
+        default=list, blank=True, null=True, help_text="List of correct option indices (1-based) for multiple choice"
     )

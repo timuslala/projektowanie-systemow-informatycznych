@@ -1,13 +1,14 @@
-from drf_yasg.utils import swagger_auto_schema
+from rest_framework import serializers, status
 from rest_framework.decorators import action
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer, SerializerMethodField
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from common.permissions import IsInstructor
-from question.views import QuestionSerializer
+from question.models import MultipleChoiceOption, Question
+from quiz.serializers import QuestionSerializer, FullQuestionSerializer
 
 from .models import QuestionBank
 
@@ -20,14 +21,56 @@ class QuestionPagination(PageNumberPagination):
 
 class QuestionBankSerializer(ModelSerializer):
     number_of_questions = SerializerMethodField()
+    questions = SerializerMethodField()
 
     class Meta:
         model = QuestionBank
-        fields = ["id", "title", "number_of_questions", "question_set"]
-        read_only_fields = ["id", "number_of_questions", "question_set"]
+        fields = ["id", "title", "number_of_questions", "questions"]
+        read_only_fields = ["id", "number_of_questions"]
 
     def get_number_of_questions(self, obj):
-        return obj.question_set.count()
+        return obj.questions.count()
+
+    def get_questions(self, obj):
+        return []
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["questions"] = serializers.ListField(
+            child=serializers.DictField(), write_only=True, required=False
+        )
+
+    def create(self, validated_data):
+        questions_data = validated_data.pop("questions", [])
+        question_bank = QuestionBank.objects.create(**validated_data)
+
+        for q_data in questions_data:
+            q_type = q_data.get("type")
+            text = q_data.get("text")
+
+            if q_type == "open":
+                q = Question.objects.create(
+                    text=text, is_open_ended=True
+                )
+                question_bank.questions.add(q)
+            elif q_type == "closed":
+                options = q_data.get("options", [])
+                correct_option_idx = q_data.get("correctOption", 0)  # 0-based index
+                opts = (options + ["]"] * 4)[:4]
+
+                mco = MultipleChoiceOption.objects.create(
+                    text=text,
+                    is_open_ended=False,
+                    option1=opts[0],
+                    option2=opts[1],
+                    option3=opts[2],
+                    option4=opts[3],
+                    correct_option=correct_option_idx + 1,  # Model uses 1-based
+                )
+                question_bank.questions.add(mco)
+
+        return question_bank
+
 
 
 class QuestionBankViewSet(ModelViewSet):
@@ -51,16 +94,9 @@ class QuestionBankViewSet(ModelViewSet):
     def perform_create(self, serializer):
         return serializer.save(user=self.request.user)
 
-    @swagger_auto_schema(
-        operation_summary="List questions in a question bank",
-        operation_description="Returns paginated questions belonging to this question bank.",
-        responses={200: QuestionSerializer(many=True)},
-    )
     @action(detail=True, methods=["get"])
     def questions(self, request, question_bank_id=None):
         bank = self.get_object()
-        qs = bank.question_set.all().order_by("id")
-
-        page = self.paginate_queryset(qs)
-        serializer = QuestionSerializer(page, many=True)
-        return self.get_paginated_response(serializer.data)
+        questions = bank.questions.all()
+        serializer = FullQuestionSerializer(questions, many=True)
+        return Response(serializer.data)

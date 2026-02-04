@@ -16,13 +16,17 @@ from .permissions import (
     IsCourseInstructor,
     IsCourseStudentReadOnly,
     IsEnrolledToCourseTaughtByInstructor,
+    IsSameUser,
 )
+from module.models import ModuleProgress
+from quiz.models import Quiz
+from questionresponse.models import QuestionResponse
 
 
 class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "name", "surname", "is_teacher"]
+        fields = ["id", "email", "name", "surname", "is_teacher", "is_superuser", "is_staff"]
 
 
 class CourseProgressSerializer(serializers.ModelSerializer):
@@ -39,16 +43,76 @@ class CourseProgressSerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
+    progress = serializers.SerializerMethodField()
+    students_count = serializers.SerializerMethodField()
+    modules_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Course
-        fields = ["id", "title", "description", "instructor"]
+        fields = ["id", "title", "description", "instructor", "progress", "students_count", "modules_count"]
         read_only_fields = ["instructor"]
+
+    def get_progress(self, obj):
+        request = self.context.get("request")
+        user = request.user
+        if request and user.is_authenticated and not getattr(user, "is_teacher", False):
+            # Check enrollment
+            try:
+                obj.courseprogress_set.get(user=user)
+            except CourseProgress.DoesNotExist:
+                return 0
+
+            # 1. Modules Progress
+            total_modules = obj.module_set.count()
+            completed_modules = ModuleProgress.objects.filter(
+                user=user, 
+                module__course=obj, 
+                completed=True
+            ).count()
+
+            # 2. Quizzes Progress
+            quizzes = obj.quiz_set.all()
+            total_quizzes = quizzes.count()
+            completed_quizzes = 0
+            
+            for quiz in quizzes:
+                # Gather all question IDs for the quiz
+                # We count a quiz as "completed" (or at least attempted) if there is at least one response
+                # to any of its questions.
+                question_ids = set()
+                for bank in quiz.question_banks.all():
+                    question_ids.update(bank.questions.values_list('id', flat=True))
+                
+                if not question_ids:
+                    # Empty quiz counts as completed for progress purposes
+                    completed_quizzes += 1
+                    continue
+
+                if QuestionResponse.objects.filter(user=user, question_id__in=question_ids).exists():
+                    completed_quizzes += 1
+
+            total_items = total_modules + total_quizzes
+            if total_items == 0:
+                return 0.0
+
+            completed_items = completed_modules + completed_quizzes
+            return round((completed_items / total_items) * 100, 2)
+        return None
+
+    def get_students_count(self, obj):
+        return obj.courseprogress_set.count()
+
+    def get_modules_count(self, obj):
+        return obj.module_set.count()
 
 
 class UserInfoView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [
-        IsEnrolledToCourseTaughtByInstructor | IsInstructor | permissions.IsAdminUser
+        IsSameUser
+        | IsEnrolledToCourseTaughtByInstructor
+        | IsInstructor
+        | permissions.IsAdminUser
     ]
 
     def get(self, request, **kwargs):

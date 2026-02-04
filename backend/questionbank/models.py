@@ -5,3 +5,4 @@ from django.db import models
 class QuestionBank(models.Model):
     title = models.CharField(max_length=255)
     user = models.ForeignKey("user.User", on_delete=models.CASCADE)
+    questions = models.ManyToManyField("question.Question", related_name="question_banks", blank=True)
