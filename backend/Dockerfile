@@ -14,10 +14,11 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+
 COPY . .
 
 EXPOSE 8000
 USER 0
 RUN chmod +x ./start.sh
 # Default command (can be overridden in docker-compose)
-CMD ["./start.sh"]
+CMD ["/bin/bash", "/app/start.sh"]

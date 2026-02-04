@@ -25,7 +25,6 @@ REM ==============================
 if "%1"=="" (
     call :deploy frontend frontend frontend
     call :deploy backend backend backend
-    call :deploy postgres postgres postgres
     echo.
     echo ✅ ALL SERVICES DEPLOYED
 ) else (
@@ -33,8 +32,6 @@ if "%1"=="" (
         call :deploy frontend frontend frontend
     ) else if /i "%1"=="backend" (
         call :deploy backend backend backend
-    ) else if /i "%1"=="postgres" (
-        call :deploy postgres postgres postgres
     ) else (
         echo ❌ Unknown service: %1
         echo Available services: frontend backend postgres
