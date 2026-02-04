@@ -13,6 +13,12 @@ from quiz.serializers import QuestionSerializer, FullQuestionSerializer
 from .models import QuestionBank
 
 
+class QuestionPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = "page_size"
+    max_page_size = 50
+
+
 class QuestionBankSerializer(ModelSerializer):
     number_of_questions = SerializerMethodField()
     questions = SerializerMethodField()
@@ -73,6 +79,7 @@ class QuestionBankViewSet(ModelViewSet):
     serializer_class = QuestionBankSerializer
     permission_classes = [IsInstructor | IsAdminUser]
     lookup_url_kwarg = "question_bank_id"
+    pagination_class = QuestionPagination
 
     def get_queryset(self):
         question_bank_id = self.kwargs.get("question_bank_id")

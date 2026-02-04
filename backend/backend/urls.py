@@ -24,7 +24,7 @@ from rest_framework_simplejwt.views import (
     TokenBlacklistView,
     TokenRefreshView,
 )
-
+from django.http import HttpResponse
 from course.views import CourseViewSet, UserInfoView
 from module.views import ModuleImageView, ModuleViewSet
 from questionbank.views import QuestionBankViewSet
@@ -45,7 +45,10 @@ schema_view = get_schema_view(
     permission_classes=[permissions.AllowAny],
     authentication_classes=[],
 )
+def health(request):
+    return HttpResponse("ok")
 urlpatterns = [
+    path("health/", health ),
     path("admin/", admin.site.urls),
     path(
         "accounts/token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"
